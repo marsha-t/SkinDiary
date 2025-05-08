@@ -26,15 +26,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void>  _loadEntries() async {
-    final allEntries = await StorageService.getAllEntries();
+    final newToday = await StorageService.getTodayEntries();
     if (!mounted) return;
-    final today = DateTime.now();
-    final newToday = allEntries.where((e) => 
-          e.date.year == today.year && 
-          e.date.month == today.month && 
-          e.date.day == today.day)
-          .toList()
-          ..sort((a,b) => b.date.compareTo(a.date));
     if (!listEquals(_todayEntries, newToday)) {
       setState(() {
         _todayEntries = newToday;
@@ -95,6 +88,8 @@ class _HomeScreenState extends State<HomeScreen> {
       context, 
       MaterialPageRoute(builder: (context) => const HistoryScreen()),
     );
+    if (!mounted) return;
+    _loadEntries();
   }
 
   Future<void> _deleteEntry(String id) async {
@@ -119,6 +114,24 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  @override
+  Widget build(BuildContext context) {
+    final hasEntries = _todayEntries.isNotEmpty;
+    return Scaffold(
+      appBar: AppBar(title: Text('Skin Diary')),
+      body: SafeArea(
+        child: Padding(
+         padding: const EdgeInsets.all(16.0),
+          child: hasEntries ? _buildEntryList() : _buildEmptyState()
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _navigateToAdd,
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+  
   Widget _buildEntryList() => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -177,79 +190,5 @@ class _HomeScreenState extends State<HomeScreen> {
     ),
   );
 
-  @override
-  Widget build(BuildContext context) {
-    final hasEntries = _todayEntries.isNotEmpty;
-    return Scaffold(
-      appBar: AppBar(title: Text('Skin Diary')),
-      body: SafeArea(
-        child: hasEntries ? _buildEntryList() : _buildEmptyState(),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _navigateToAdd,
-        child: const Icon(Icons.add),
-      ),
-
-      // hasEntries 
-      //   ? SafeArea(
-      //       child: Column(
-      //       crossAxisAlignment: CrossAxisAlignment.start,
-      //       children: [
-      //         const Text("Today's Entries", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-      //         const SizedBox(height: 10),
-      //         Expanded(
-      //           child: ListView.builder(
-      //             itemCount: _todayEntries.length,
-      //             itemBuilder: (context, index) {
-      //               final entry = _todayEntries[index];
-      //               final formatted = DateFormat('h:mm a').format(entry.date);
-                    
-      //               return Dismissible(
-      //                 key: ValueKey(entry.id),
-      //                 direction: DismissDirection.endToStart,
-      //                   background: Container(
-      //                     color: Colors.red,
-      //                     alignment: Alignment.centerRight,
-      //                     padding: const EdgeInsets.symmetric(horizontal: 20),
-      //                     child: const Icon(Icons.delete, color: Colors.white),
-      //                   ),
-      //                 confirmDismiss: (direction) => showDeleteConfirmationDialog(context),
-      //                 onDismissed: (direction) => _deleteEntry(entry.id),
-      //                 child:ListTile(
-      //                   title: Text('Time: $formatted'),
-      //                   subtitle: Text('Rating: ${entry.rating} | Tags: ${entry.tags.join(', ')}'),
-      //                   onTap: () => _navigateToDetails(entry)
-      //                 )
-      //               );
-      //             }
-      //           ),
-      //         ),
-      //         ElevatedButton(
-      //           onPressed: _navigateToAdd,
-      //           child: const Text('Add New Entry')),
-      //         const SizedBox(height: 10),
-      //         ElevatedButton(
-      //           onPressed: _navigateToHistory,
-      //           child: const Text('View History'))
-      //       ]
-      //     ) 
-      //   )
-      //   : SafeArea (
-      //     child:Column(
-      //       mainAxisAlignment: MainAxisAlignment.center,
-      //       children: [
-      //         const Text('No entries yet today'),
-      //         const SizedBox(height: 10),
-      //         ElevatedButton(
-      //           onPressed: _navigateToAdd,
-      //           child: const Text('Add New Entry')),
-      //         const SizedBox(height: 10),
-      //         ElevatedButton(
-      //           onPressed: _navigateToHistory,
-      //           child: const Text('View History'))
-      //       ]
-      //     )
-      //   )
-      );
-  }
+  
 }

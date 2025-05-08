@@ -6,6 +6,7 @@ import 'package:skin_diary/services/storage.dart';
 import 'package:skin_diary/models/skin_entry.dart';
 import 'package:skin_diary/utils/snackbar.dart';
 import 'package:skin_diary/screens/entry_details.dart';
+import 'package:skin_diary/screens/add_edit_entry.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -57,6 +58,26 @@ class _HistoryScreenState extends State<HistoryScreen> {
       );
     }
   }
+
+Future<void> _navigateToAdd() async {
+  final returnedEntry = await Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => const AddEditEntryScreen()),
+  );
+
+  if (!mounted) return;
+
+  if (returnedEntry != null) {
+    setState(() {
+      allEntries.add(returnedEntry);
+      allEntries.sort((a, b) => b.date.compareTo(a.date));
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('New entry added')),
+    );
+  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -110,7 +131,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
           );
         },
         )
-      )
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _navigateToAdd,
+        child: const Icon(Icons.add),
+      ),
     );
   }
 }

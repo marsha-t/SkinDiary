@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:skin_diary/utils/dialogs.dart';
 import 'package:skin_diary/models/skin_entry.dart';
 import 'package:skin_diary/services/storage.dart';
@@ -36,6 +37,41 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
     _labeledPhotos = entry?.photos ?? [];
     _notesController.text = _notes;
     _tagsController.text = _tags.join(', ');
+  }
+
+  @override
+  void dispose() {
+    _notesController.dispose();
+    _tagsController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _selectDateTime() async {
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: _date,
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+    );
+
+    if (pickedDate == null || !mounted) return;
+
+    final pickedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(_date),
+    );
+
+    if (pickedTime == null || !mounted) return;
+
+    setState(() {
+      _date = DateTime(
+        pickedDate.year,
+        pickedDate.month,
+        pickedDate.day,
+        pickedTime.hour,
+        pickedTime.minute,
+      );
+    });
   }
 
   Future<void>  _pickImage() async {
@@ -80,7 +116,7 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
     );
     await StorageService.saveEntry(entry);
     if (mounted) {
-      Navigator.pop(context);
+      Navigator.pop(context, entry);
     }
   }
   
@@ -102,77 +138,208 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Add/Edit Entry')),
+      appBar: AppBar(
+        title: Text(widget.existingEntry == null ? 'Add Entry' : 'Edit Entry'),
+      ),
       body: SingleChildScrollView(
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Date: ${_date.toLocal()}'), // TODO allow edit of date
+            _buildDateAndRating(),
             const SizedBox(height: 10),
-            Text('Rating: ${_rating.toInt()}'),
-            Slider(
-              value: _rating.toDouble(),
-              min: 1, 
-              max: 5, 
-              divisions: 4, 
-              label: _rating.toString(), 
-              onChanged: (value) {
-                setState(() => _rating = value.toInt());
-              }),
+            _buildTagField(),
             const SizedBox(height: 10),
-            TextField(
-              controller: _tagsController,
-              maxLines: 3,
-              decoration: const InputDecoration(labelText: 'Tags (comma separated)'),
+            _buildNotesField(),
+            const SizedBox(height: 10),
+            _buildPhotoSection(),
+            const SizedBox(height: 10),
+            _buildSaveDeleteButtons(widget.existingEntry != null),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDateAndRating() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Date: ${DateFormat('MMMM d, yyyy – h:mm a').format(_date)}',
+              ),
             ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: _notesController,
-              maxLines: 3,
-              decoration: const InputDecoration(labelText: 'Notes'),
-            ),
-            const SizedBox(height: 10),
-            PhotoLabelDropdown(
-              onLabelSelected: (label) {
-                _selectedLabel = label;
-              },
-            ),
-            const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: _pickImage, 
-              child: const Text('Add Photo')
-            ),
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 8,
-              children: _labeledPhotos.map((photo) => Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Image.file(
-                    File(photo['path']!),
-                    width: 100, 
-                    height: 100,
-                    fit: BoxFit.cover,
-                  ),
-                  Text(photo['label'] ?? ''),
-                ],
-              )).toList(),
-            ),
-            const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: _saveEntry, 
-              child: const Text('Save Entry')
-            ),
-            const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: _deleteEntry, 
-              child: const Text('Delete Entry')
+            TextButton(
+              onPressed: _selectDateTime,
+              child: const Text('Change'),
             ),
           ],
         ),
-      )
+        const SizedBox(height: 10),
+        Text('Rating: $_rating'),
+        Slider(
+          value: _rating.toDouble(),
+          min: 1,
+          max: 5,
+          divisions: 4,
+          label: _rating.toString(),
+          onChanged: (value) {
+            setState(() => _rating = value.toInt());
+          },
+        ),
+      ],
     );
   }
+
+
+  Widget _buildTagField() {
+    return TextField(
+      controller: _tagsController,
+      maxLines: 3,
+      decoration: const InputDecoration(labelText: 'Tags (comma separated)'),
+    );
+  }
+
+  Widget _buildNotesField() {
+    return TextField(
+      controller: _notesController,
+      maxLines: 3,
+      decoration: const InputDecoration(labelText: 'Notes'),
+    );
+  }
+
+  Widget _buildPhotoSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        PhotoLabelDropdown(onLabelSelected: (label) => _selectedLabel = label),
+        const SizedBox(height: 10),
+        ElevatedButton(
+          onPressed: _pickImage,
+          child: const Text('Add Photo'),
+        ),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          children: _labeledPhotos.map((photo) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image.file(
+                  File(photo['path']!),
+                  width: 100,
+                  height: 100,
+                  fit: BoxFit.cover,
+                ),
+                Text(photo['label'] ?? ''),
+              ],
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSaveDeleteButtons(bool showDelete) {
+    return Column(
+      children: [
+        ElevatedButton(
+          onPressed: _saveEntry,
+          child: const Text('Save Entry'),
+        ),
+        const SizedBox(height: 10),
+        if (showDelete)
+          ElevatedButton(
+            onPressed: _deleteEntry,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Delete Entry'),
+          ),
+      ],
+    );
+  }
+
+  // @override
+  // Widget build(BuildContext context) {
+  //   return Scaffold(
+  //     appBar: AppBar(title: Text(widget.existingEntry == null ? 'Add Entry' : 'Edit Entry')),
+  //     body: SingleChildScrollView(
+  //       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+  //       padding: const EdgeInsets.all(16),
+  //       child: Column(
+  //         crossAxisAlignment: CrossAxisAlignment.start,
+  //         children: [
+  //           Text('Date: ${_date.toLocal()}'), // TODO allow edit of date
+  //           const SizedBox(height: 10),
+  //           Text('Rating: ${_rating.toInt()}'),
+  //           Slider(
+  //             value: _rating.toDouble(),
+  //             min: 1, 
+  //             max: 5, 
+  //             divisions: 4, 
+  //             label: _rating.toString(), 
+  //             onChanged: (value) {
+  //               setState(() => _rating = value.toInt());
+  //             }),
+  //           const SizedBox(height: 10),
+  //           TextField(
+  //             controller: _tagsController,
+  //             maxLines: 3,
+  //             decoration: const InputDecoration(labelText: 'Tags (comma separated)'),
+  //           ),
+  //           const SizedBox(height: 10),
+  //           TextField(
+  //             controller: _notesController,
+  //             maxLines: 3,
+  //             decoration: const InputDecoration(labelText: 'Notes'),
+  //           ),
+  //           const SizedBox(height: 10),
+  //           PhotoLabelDropdown(
+  //             onLabelSelected: (label) {
+  //               _selectedLabel = label;
+  //             },
+  //           ),
+  //           const SizedBox(height: 10),
+  //           ElevatedButton(
+  //             onPressed: _pickImage, 
+  //             child: const Text('Add Photo')
+  //           ),
+  //           const SizedBox(height: 10),
+  //           Wrap(
+  //             spacing: 8,
+  //             children: _labeledPhotos.map((photo) => Column(
+  //               mainAxisSize: MainAxisSize.min,
+  //               children: [
+  //                 Image.file(
+  //                   File(photo['path']!),
+  //                   width: 100, 
+  //                   height: 100,
+  //                   fit: BoxFit.cover,
+  //                 ),
+  //                 Text(photo['label'] ?? ''),
+  //               ],
+  //             )).toList(),
+  //           ),
+  //           const SizedBox(height: 10),
+  //           ElevatedButton(
+  //             onPressed: _saveEntry, 
+  //             child: const Text('Save Entry')
+  //           ),
+  //           const SizedBox(height: 10),
+  //           if (widget.existingEntry != null) 
+  //             ElevatedButton(
+  //               onPressed: _deleteEntry, 
+  //               child: const Text('Delete Entry')
+  //             ),
+  //         ],
+  //       ),
+  //     )
+  //   );
+  // }
 }
