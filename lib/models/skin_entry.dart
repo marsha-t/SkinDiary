@@ -1,3 +1,5 @@
+import 'package:skin_diary/models/product.dart';
+
 class SkinEntry {
   final String id;
   final DateTime date;
@@ -5,7 +7,8 @@ class SkinEntry {
   final int rating;
   final List<String>tags;
   final String notes;
-  
+  final List<Product> productsUsed;
+
   SkinEntry({
     required this.id,
     required this.date,
@@ -13,6 +16,7 @@ class SkinEntry {
     required this.rating,
     required this.tags,
     required this.notes,
+    this.productsUsed = const [],
   });
 
   Map<String, dynamic> toMap() {
@@ -23,6 +27,7 @@ class SkinEntry {
       'rating': rating, 
       'tags': tags.join(','),
       'notes': notes,
+      'productsUsed': productsUsed.map((p) => p.toMap()).toList(),
     };
   }
   
@@ -40,6 +45,9 @@ class SkinEntry {
       rating: map['rating'],
       tags: (map['tags'] as String).split(','),
       notes: map['notes'],
+      productsUsed: map['productsUsed'] != null 
+        ? List<Product>.from(map['productsUsed'].map((p) => Product.fromMap(p)))
+        : [],
     );
   }
 }

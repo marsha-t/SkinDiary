@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
-import 'package:skin_diary/services/storage.dart';
+import 'package:skin_diary/services/storage_entry.dart';
 import 'package:skin_diary/models/skin_entry.dart';
 import 'package:skin_diary/utils/snackbar.dart';
 import 'package:skin_diary/utils/dialogs.dart';
@@ -26,7 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void>  _loadEntries() async {
-    final newToday = await StorageService.getTodayEntries();
+    final newToday = await StorageEntry.getTodayEntries();
     if (!mounted) return;
     if (!listEquals(_todayEntries, newToday)) {
       setState(() {
@@ -51,7 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
               _todayEntries.add(returnedEntry);
               _todayEntries.sort((a, b) => b.date.compareTo(a.date));
             });
-            await StorageService.saveEntry(returnedEntry);
+            await StorageEntry.saveEntry(returnedEntry);
             if (mounted) _loadEntries();
           },
         ),
@@ -75,7 +75,7 @@ class _HomeScreenState extends State<HomeScreen> {
               _todayEntries.add(returnedEntry);
               _todayEntries.sort((a, b) => b.date.compareTo(a.date));
             });
-            await StorageService.saveEntry(returnedEntry);
+            await StorageEntry.saveEntry(returnedEntry);
             if (mounted) _loadEntries();
           },
         ),
@@ -94,7 +94,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _deleteEntry(String id) async {
     final deletedEntry = _todayEntries.firstWhere((e) => e.id == id);
-    await StorageService.deleteEntry(id);
+    await StorageEntry.deleteEntry(id);
     if (!mounted) return;
     setState(() {
       _todayEntries.removeWhere((entry) => entry.id == id);
@@ -107,7 +107,7 @@ class _HomeScreenState extends State<HomeScreen> {
             _todayEntries.add(deletedEntry);
             _todayEntries.sort((a, b) => b.date.compareTo(a.date));
           });
-          await StorageService.saveEntry(deletedEntry);
+          await StorageEntry.saveEntry(deletedEntry);
           if (mounted) _loadEntries();
         },
       ),
@@ -121,7 +121,7 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(title: Text('Skin Diary')),
       body: SafeArea(
         child: Padding(
-         padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16.0),
           child: hasEntries ? _buildEntryList() : _buildEmptyState()
         ),
       ),
@@ -164,8 +164,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildActionButtons() => Column(
     children: [
-      // ElevatedButton(onPressed: _navigateToAdd, child: const Text('Add New Entry')),
-      const SizedBox(height: 10),
       ElevatedButton(onPressed: _navigateToHistory, child: const Text('View History')),
     ],
   );

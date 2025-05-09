@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:skin_diary/utils/dialogs.dart';
+import 'package:skin_diary/models/product.dart';
 import 'package:skin_diary/models/skin_entry.dart';
-import 'package:skin_diary/services/storage.dart';
+import 'package:skin_diary/screens/select_product.dart';
+import 'package:skin_diary/services/storage_entry.dart';
 import 'package:skin_diary/widgets/photo_label_dropdown.dart';
 
 class AddEditEntryScreen extends StatefulWidget {
@@ -25,6 +27,7 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
   final _notesController = TextEditingController();
   List<Map<String, String>> _labeledPhotos = [];
   String _selectedLabel = 'Full Face';
+  List<Product> _selectedProducts = [];
 
   @override
   void initState() {
@@ -104,6 +107,23 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
     }
   }
 
+  Future<void> _selectProducts() async {
+    final result = await Navigator.push<List<Product>>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SelectProductScreen(
+          initialSelection: _selectedProducts,
+        ),
+      ),
+    );
+
+    if (result != null) {
+      setState(() {
+        _selectedProducts = result;
+      });
+    }
+  }
+
   Future<void>  _saveEntry() async {
     final id = widget.existingEntry?.id ?? DateTime.now().millisecondsSinceEpoch.toString();
     final entry = SkinEntry(
@@ -113,8 +133,9 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
       rating: _rating, 
       tags: _tagsController.text.split(',').map((e) => e.trim()).toList(),
       notes: _notesController.text,
+      productsUsed: _selectedProducts,
     );
-    await StorageService.saveEntry(entry);
+    await StorageEntry.saveEntry(entry);
     if (mounted) {
       Navigator.pop(context, entry);
     }
@@ -128,7 +149,7 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
       final confirm = await showDeleteConfirmationDialog(context);
       if (confirm) {
         final deleted = widget.existingEntry!;
-        await StorageService.deleteEntry(widget.existingEntry!.id);
+        await StorageEntry.deleteEntry(widget.existingEntry!.id);
         if (!mounted) return;
         Navigator.pop(context, deleted);
       }
@@ -154,6 +175,20 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
             _buildNotesField(),
             const SizedBox(height: 10),
             _buildPhotoSection(),
+            const SizedBox(height: 10),
+            Text('Products Used:', style: TextStyle(fontWeight: FontWeight.bold)),
+            TextButton(
+              onPressed: _selectProducts,
+              child: Text(
+                _selectedProducts.isEmpty
+                  ? 'Select products used'
+                  : '${_selectedProducts.length} product(s) selected',
+              ),
+            ),
+            Wrap(
+              spacing: 8,
+              children: _selectedProducts.map((p) => Chip(label: Text(p.name))).toList(),
+            ),
             const SizedBox(height: 10),
             _buildSaveDeleteButtons(widget.existingEntry != null),
           ],

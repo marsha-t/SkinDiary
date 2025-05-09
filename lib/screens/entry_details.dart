@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:skin_diary/utils/dialogs.dart';
-import 'package:skin_diary/services/storage.dart';
+import 'package:skin_diary/services/storage_entry.dart';
 import 'package:skin_diary/models/skin_entry.dart';
 import 'package:skin_diary/screens/add_edit_entry.dart';
 
@@ -40,7 +40,7 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen>
   Future<void> _deleteEntry() async {
     final confirm = await showDeleteConfirmationDialog(context);
     if (confirm) {
-      await StorageService.deleteEntry(_entry.id);
+      await StorageEntry.deleteEntry(_entry.id);
       if (!mounted) return;
       Navigator.pop(
         context, _entry);

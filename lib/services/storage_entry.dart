@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/skin_entry.dart';
+import 'package:skin_diary/models/skin_entry.dart';
 
-class StorageService {
+class StorageEntry {
   static const _key = 'skin_entries';
   
   static Future<void> saveEntry(SkinEntry entry) async {
