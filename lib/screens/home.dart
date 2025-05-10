@@ -8,6 +8,7 @@ import 'package:skin_diary/utils/dialogs.dart';
 import 'package:skin_diary/screens/add_edit_entry.dart';
 import 'package:skin_diary/screens/history.dart';
 import 'package:skin_diary/screens/entry_details.dart';
+import 'package:skin_diary/screens/shelf.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -92,6 +93,13 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadEntries();
   }
 
+  Future<void> _navigateToShelf() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const ShelfScreen()),
+    );
+  }
+
   Future<void> _deleteEntry(String id) async {
     final deletedEntry = _todayEntries.firstWhere((e) => e.id == id);
     await StorageEntry.deleteEntry(id);
@@ -164,7 +172,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildActionButtons() => Column(
     children: [
-      ElevatedButton(onPressed: _navigateToHistory, child: const Text('View History')),
+      ElevatedButton(
+        onPressed: _navigateToHistory,
+        child: const Text('View History'),
+      ),
+      const SizedBox(height: 8),
+      ElevatedButton(
+        onPressed: _navigateToShelf,
+        child: const Text('My Product Shelf'),
+      ),
     ],
   );
 

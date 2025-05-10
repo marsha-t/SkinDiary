@@ -8,10 +8,10 @@ class SelectProductScreen extends StatefulWidget {
   const SelectProductScreen({super.key, this.initialSelection});
 
   @override
-  State<SelectProductScreen> createState() => _SelectProductScreen();
+  State<SelectProductScreen> createState() => _SelectProductScreenState();
 }
 
-class _SelectProductScreen extends State<SelectProductScreen> {
+class _SelectProductScreenState extends State<SelectProductScreen> {
   List<Product> _allProducts = [];
   List<Product> _selectedProducts = [];
   
@@ -47,6 +47,7 @@ class _SelectProductScreen extends State<SelectProductScreen> {
                     ],
                   ),
               )
+            )
             : Column(
               children: [
                 Expanded(

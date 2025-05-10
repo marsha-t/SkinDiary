@@ -9,6 +9,8 @@ import 'package:skin_diary/screens/select_product.dart';
 import 'package:skin_diary/services/storage_entry.dart';
 import 'package:skin_diary/widgets/photo_label_dropdown.dart';
 
+
+
 class AddEditEntryScreen extends StatefulWidget {
   final SkinEntry? existingEntry;
   
@@ -19,15 +21,18 @@ class AddEditEntryScreen extends StatefulWidget {
 }
 
 class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
+  final _formKey = GlobalKey<FormState>();
+
   late DateTime _date;
   late int _rating;
   late List<String> _tags;
-  final _tagsController = TextEditingController();
   late String _notes;
-  final _notesController = TextEditingController();
   List<Map<String, String>> _labeledPhotos = [];
   String _selectedLabel = 'Full Face';
   List<Product> _selectedProducts = [];
+
+  final _tagsController = TextEditingController();
+  final _notesController = TextEditingController();
 
   @override
   void initState() {
@@ -38,17 +43,38 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
     _tags = entry?.tags ?? [];
     _notes = entry?.notes ?? '';
     _labeledPhotos = entry?.photos ?? [];
-    _notesController.text = _notes;
+    _selectedProducts = entry?.productsUsed ?? [];
     _tagsController.text = _tags.join(', ');
+    _notesController.text = _notes;
   }
 
   @override
   void dispose() {
-    _notesController.dispose();
     _tagsController.dispose();
+    _notesController.dispose();
     super.dispose();
   }
 
+  Future<void> _saveEntry() async {
+    if (!_formKey.currentState!.validate()) return;
+    _formKey.currentState!.save();
+
+    final id = widget.existingEntry?.id ?? DateTime.now().millisecondsSinceEpoch.toString();
+
+    final entry = SkinEntry(
+      id: id,
+      date: _date,
+      photos: _labeledPhotos,
+      rating: _rating,
+      tags: _tags,
+      notes: _notes,
+      productsUsed: _selectedProducts,
+    );
+
+    await StorageEntry.saveEntry(entry);
+    if (mounted) Navigator.pop(context, entry);
+  }
+  
   Future<void> _selectDateTime() async {
     final pickedDate = await showDatePicker(
       context: context,
@@ -124,23 +150,6 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
     }
   }
 
-  Future<void>  _saveEntry() async {
-    final id = widget.existingEntry?.id ?? DateTime.now().millisecondsSinceEpoch.toString();
-    final entry = SkinEntry(
-      id: id, 
-      date: _date, 
-      photos: _labeledPhotos, 
-      rating: _rating, 
-      tags: _tagsController.text.split(',').map((e) => e.trim()).toList(),
-      notes: _notesController.text,
-      productsUsed: _selectedProducts,
-    );
-    await StorageEntry.saveEntry(entry);
-    if (mounted) {
-      Navigator.pop(context, entry);
-    }
-  }
-  
   Future<void> _deleteEntry() async {
     if (widget.existingEntry == null) {
       Navigator.pop(context);
@@ -165,35 +174,56 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
       body: SingleChildScrollView(
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildDateAndRating(),
-            const SizedBox(height: 10),
-            _buildTagField(),
-            const SizedBox(height: 10),
-            _buildNotesField(),
-            const SizedBox(height: 10),
-            _buildPhotoSection(),
-            const SizedBox(height: 10),
-            Text('Products Used:', style: TextStyle(fontWeight: FontWeight.bold)),
-            TextButton(
-              onPressed: _selectProducts,
-              child: Text(
-                _selectedProducts.isEmpty
-                  ? 'Select products used'
-                  : '${_selectedProducts.length} product(s) selected',
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildDateAndRating(),
+              const SizedBox(height: 10),
+              _buildTagField(),
+              const SizedBox(height: 10),
+              _buildNotesField(),
+              const SizedBox(height: 10),
+              _buildPhotoSection(),
+              const SizedBox(height: 10),
+              Text('Products Used:', style: const TextStyle(fontWeight: FontWeight.bold)),
+              TextButton(
+                onPressed: _selectProducts,
+                child: Text(
+                  _selectedProducts.isEmpty
+                      ? 'Select products used'
+                      : '${_selectedProducts.length} product(s) selected',
+                ),
               ),
-            ),
-            Wrap(
-              spacing: 8,
-              children: _selectedProducts.map((p) => Chip(label: Text(p.name))).toList(),
-            ),
-            const SizedBox(height: 10),
-            _buildSaveDeleteButtons(widget.existingEntry != null),
-          ],
+              Wrap(
+                spacing: 8,
+                children: _selectedProducts.map((p) => Chip(label: Text(p.name))).toList(),
+              ),
+              const SizedBox(height: 10),
+              _buildSaveDeleteButtons(widget.existingEntry != null),
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _buildTagField() {
+    return TextFormField(
+      controller: _tagsController,
+      maxLines: 2,
+      decoration: const InputDecoration(labelText: 'Tags (comma separated)'),
+      onSaved: (value) => _tags = value!.split(',').map((e) => e.trim()).toList(),
+    );
+  }
+
+  Widget _buildNotesField() {
+    return TextFormField(
+      controller: _notesController,
+      maxLines: 3,
+      decoration: const InputDecoration(labelText: 'Notes'),
+      onSaved: (value) => _notes = value ?? '',
     );
   }
 
@@ -227,23 +257,6 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
           },
         ),
       ],
-    );
-  }
-
-
-  Widget _buildTagField() {
-    return TextField(
-      controller: _tagsController,
-      maxLines: 3,
-      decoration: const InputDecoration(labelText: 'Tags (comma separated)'),
-    );
-  }
-
-  Widget _buildNotesField() {
-    return TextField(
-      controller: _notesController,
-      maxLines: 3,
-      decoration: const InputDecoration(labelText: 'Notes'),
     );
   }
 
@@ -299,82 +312,4 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
       ],
     );
   }
-
-  // @override
-  // Widget build(BuildContext context) {
-  //   return Scaffold(
-  //     appBar: AppBar(title: Text(widget.existingEntry == null ? 'Add Entry' : 'Edit Entry')),
-  //     body: SingleChildScrollView(
-  //       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-  //       padding: const EdgeInsets.all(16),
-  //       child: Column(
-  //         crossAxisAlignment: CrossAxisAlignment.start,
-  //         children: [
-  //           Text('Date: ${_date.toLocal()}'), // TODO allow edit of date
-  //           const SizedBox(height: 10),
-  //           Text('Rating: ${_rating.toInt()}'),
-  //           Slider(
-  //             value: _rating.toDouble(),
-  //             min: 1, 
-  //             max: 5, 
-  //             divisions: 4, 
-  //             label: _rating.toString(), 
-  //             onChanged: (value) {
-  //               setState(() => _rating = value.toInt());
-  //             }),
-  //           const SizedBox(height: 10),
-  //           TextField(
-  //             controller: _tagsController,
-  //             maxLines: 3,
-  //             decoration: const InputDecoration(labelText: 'Tags (comma separated)'),
-  //           ),
-  //           const SizedBox(height: 10),
-  //           TextField(
-  //             controller: _notesController,
-  //             maxLines: 3,
-  //             decoration: const InputDecoration(labelText: 'Notes'),
-  //           ),
-  //           const SizedBox(height: 10),
-  //           PhotoLabelDropdown(
-  //             onLabelSelected: (label) {
-  //               _selectedLabel = label;
-  //             },
-  //           ),
-  //           const SizedBox(height: 10),
-  //           ElevatedButton(
-  //             onPressed: _pickImage, 
-  //             child: const Text('Add Photo')
-  //           ),
-  //           const SizedBox(height: 10),
-  //           Wrap(
-  //             spacing: 8,
-  //             children: _labeledPhotos.map((photo) => Column(
-  //               mainAxisSize: MainAxisSize.min,
-  //               children: [
-  //                 Image.file(
-  //                   File(photo['path']!),
-  //                   width: 100, 
-  //                   height: 100,
-  //                   fit: BoxFit.cover,
-  //                 ),
-  //                 Text(photo['label'] ?? ''),
-  //               ],
-  //             )).toList(),
-  //           ),
-  //           const SizedBox(height: 10),
-  //           ElevatedButton(
-  //             onPressed: _saveEntry, 
-  //             child: const Text('Save Entry')
-  //           ),
-  //           const SizedBox(height: 10),
-  //           if (widget.existingEntry != null) 
-  //             ElevatedButton(
-  //               onPressed: _deleteEntry, 
-  //               child: const Text('Delete Entry')
-  //             ),
-  //         ],
-  //       ),
-  //     )
-  //   );
-  // }
 }
