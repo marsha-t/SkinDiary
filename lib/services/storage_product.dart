@@ -18,25 +18,6 @@ class StorageProduct {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_key, encoded);
   }
-  
-  //  static Future<void> addProduct(Product product) async {
-  //   final all = await getAllProducts();
-  //   all.add(product);
-  //   final prefs = await SharedPreferences.getInstance();
-  //   await prefs.setString(_key, jsonEncode(all.map((p) => p.toMap()).toList()));
-  // }
-
-  // static Future<void> updateProduct(Product product) async {
-  //   final all = await getAllProducts();
-  //   final index = all.indexWhere((p) => p.id == product.id);
-  //   if (index != -1) {
-  //     all[index] = product;
-  //     final prefs = await SharedPreferences.getInstance();
-  //     await prefs.setString(_key, jsonEncode(all.map((p) => p.toMap()).toList()));
-  //   } else {
-  //     throw Exception('Product with ID ${product.id} not found.');
-  //   }
-  // }
 
   static Future<List<Product>> getAllProducts() async {
     final prefs = await SharedPreferences.getInstance();

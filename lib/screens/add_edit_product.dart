@@ -47,17 +47,18 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       brand: _brand,
       notes: _notes,
       dateAdded: widget.product?.dateAdded ?? now,
-      dateOpened: widget.product?.dateOpened,
-      expirationDate: widget.product?.expirationDate,
-      categories: widget.product?.categories ?? [],
-      keyIngredients: widget.product?.keyIngredients ?? [],
-      productType: widget.product?.productType ?? '',
+      dateOpened: _dateOpened,
+      expirationDate: _expirationDate,
+      categories: _categories,
+      keyIngredients: _keyIngredients,
+      productType: _productType,
     );
 
     await StorageProduct.saveProduct(newProduct);
-     if (!mounted) return;
+    if (!mounted) return;
     Navigator.pop(context);
   }
+
   Future<void> _deleteProduct() async {
     if (widget.product == null) {
       Navigator.pop(context); // Nothing to delete
