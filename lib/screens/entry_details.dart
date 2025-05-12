@@ -129,18 +129,30 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen>
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
-                children: _entry.photos.map((photo) => Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Image.file(
-                      File(photo['photo']!),
-                      width: 100, 
-                      height: 100,
-                      fit: BoxFit.cover,
-                    ),
-                    Text(photo['label'] ?? ''),
-                  ],
-                )).toList(),
+                children: _entry.photos.map((photo) {
+                  final file = File(photo['path']!);
+                  final label = photo['label'] ?? '';
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      file.existsSync()
+                          ? Image.file(
+                              file,
+                              width: 100,
+                              height: 100,
+                              fit: BoxFit.cover,
+                            )
+                          : Container(
+                              width: 100,
+                              height: 100,
+                              color: Colors.grey[300],
+                              alignment: Alignment.center,
+                              child: const Icon(Icons.broken_image, size: 40),
+                            ),
+                      Text(label),
+                    ],
+                  );
+                }).toList(),
               ),
             ],
           ),

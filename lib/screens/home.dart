@@ -1,6 +1,11 @@
+import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:skin_diary/services/database_service.dart';
 import 'package:skin_diary/services/storage_entry.dart';
 import 'package:skin_diary/models/skin_entry.dart';
 import 'package:skin_diary/utils/snackbar.dart';
@@ -122,6 +127,37 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Future<void> exportDataAsJson() async {
+    try {
+      // 1. Get all data
+      final data = await DatabaseService.getAllPreferences();
+
+      // 2. Convert to pretty JSON
+      final encoder = JsonEncoder.withIndent('  ');
+      final jsonString = encoder.convert(data);
+
+      // 3. Generate timestamp
+      final now = DateTime.now();
+      final formatted = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}_${now.hour.toString().padLeft(2, '0')}-${now.minute.toString().padLeft(2, '0')}';
+
+      // 4. Get file path
+      final directory = await getApplicationDocumentsDirectory();
+      final filePath = '${directory.path}/skin_diary_export_$formatted.json';
+
+      // 5. Write to file
+      final file = File(filePath);
+      await file.writeAsString(jsonString);
+
+      // 6. Share it
+      await Share.shareXFiles(
+        [XFile(filePath)],
+        text: 'Here is your Skin Diary data backup.',
+      );
+    } catch (e) {
+      debugPrint('Export failed: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final hasEntries = _todayEntries.isNotEmpty;
@@ -180,6 +216,11 @@ class _HomeScreenState extends State<HomeScreen> {
       ElevatedButton(
         onPressed: _navigateToShelf,
         child: const Text('My Product Shelf'),
+      ),
+      const SizedBox(height: 8),
+      ElevatedButton(
+        onPressed: exportDataAsJson,
+        child: const Text('Export Data'),
       ),
     ],
   );

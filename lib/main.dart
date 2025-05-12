@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:skin_diary/screens/home.dart';
 import 'package:skin_diary/screens/add_edit_entry.dart';
 import 'package:skin_diary/screens/history.dart';
+import 'package:skin_diary/screens/shelf.dart';
 
 void main() {
   runApp(const SkinDiary());
@@ -26,8 +27,9 @@ class SkinDiary extends StatelessWidget
       ),
       routes: {
         '/': (context) => HomeScreen(),
-        '/add': (context) => AddEditEntryScreen(),
+        '/add_entry': (context) => AddEditEntryScreen(),
         '/history': (context) => HistoryScreen(),
+        '/product_shelf': (context) => ShelfScreen(),
       },
       debugShowCheckedModeBanner: false,
     );

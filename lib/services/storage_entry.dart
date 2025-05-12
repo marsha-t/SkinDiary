@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
+// import 'package:shared_preferences/shared_preferences.dart';
+import 'package:skin_diary/services/database_service.dart';
 import 'package:skin_diary/models/skin_entry.dart';
 
 class StorageEntry {
@@ -15,13 +17,15 @@ class StorageEntry {
       entries.add(entry);
     }
   final entryMap = entries.map((e) => e.toMap()).toList();
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.setString(_key, jsonEncode(entryMap));
+  // final prefs = await SharedPreferences.getInstance();
+  // await prefs.setString(_key, jsonEncode(entryMap));
+  await DatabaseService.setPreference(_key, jsonEncode(entryMap));
   }
   
   static Future<List<SkinEntry>> getAllEntries() async {
-    final prefs = await SharedPreferences.getInstance();
-    final entries = prefs.getString(_key);
+    // final prefs = await SharedPreferences.getInstance();
+    // final entries = prefs.getString(_key);
+    final entries = await DatabaseService.getPreference(_key);
     if (entries == null) return [];
     final List decoded = jsonDecode(entries);
     return decoded.map((e) => SkinEntry.fromMap(e)).toList();
@@ -29,10 +33,27 @@ class StorageEntry {
 
   static Future<void> deleteEntry(String id) async {
     final entries = await getAllEntries();
-    entries.removeWhere((e) => e.id == id);
+    SkinEntry? entryToDelete;
+    try {
+      entryToDelete = entries.firstWhere((e) => e.id == id);
+    } catch (_) {
+      entryToDelete = null;
+    }
+    if (entryToDelete != null) {
+      for (final photo in entryToDelete.photos) {
+        final path = photo['path'];
+        if (path != null) {
+          final file = File(path);
+          if (await file.exists()) {
+            await file.delete();
+          }
+        }
+      }
+      entries.remove(entryToDelete);
+    }
+    // entries.removeWhere((e) => e.id == id);
     final entryMap = entries.map((e) => e.toMap()).toList();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_key, jsonEncode(entryMap));
+    await DatabaseService.setPreference(_key, jsonEncode(entryMap));
   }
 
   static Future<List<SkinEntry>> getTodayEntries() async {

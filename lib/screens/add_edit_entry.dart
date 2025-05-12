@@ -8,6 +8,8 @@ import 'package:skin_diary/models/skin_entry.dart';
 import 'package:skin_diary/screens/select_product.dart';
 import 'package:skin_diary/services/storage_entry.dart';
 import 'package:skin_diary/widgets/photo_label_dropdown.dart';
+import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
 
 
 
@@ -53,6 +55,14 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
     _tagsController.dispose();
     _notesController.dispose();
     super.dispose();
+  }
+
+  Future<String> saveImagePermanently(String tempImagePath) async {
+    final directory = await getApplicationDocumentsDirectory();
+    final fileName = path.basename(tempImagePath);
+    final newPath = path.join(directory.path, fileName);
+    final newImage = await File(tempImagePath).copy(newPath);
+    return newImage.path;
   }
 
   Future<void> _saveEntry() async {
@@ -123,9 +133,10 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
     if (source != null) {
       final pickedFile = await ImagePicker().pickImage(source: source);
       if (pickedFile != null) {
+        final savedPath = await saveImagePermanently(pickedFile.path);
         setState(() {
           _labeledPhotos.add({
-            'path': pickedFile.path,
+            'path': savedPath,
             'label': _selectedLabel,
           });
         });
@@ -274,15 +285,19 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
         Wrap(
           spacing: 8,
           children: _labeledPhotos.map((photo) {
+            final file = File(photo['path']!);
             return Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Image.file(
-                  File(photo['path']!),
-                  width: 100,
-                  height: 100,
-                  fit: BoxFit.cover,
-                ),
+                file.existsSync()
+                    ? Image.file(file, width: 100, height: 100, fit: BoxFit.cover)
+                    : Container(
+                        width: 100,
+                        height: 100,
+                        color: Colors.grey[300],
+                        alignment: Alignment.center,
+                        child: const Icon(Icons.broken_image, size: 40),
+                      ),
                 Text(photo['label'] ?? ''),
               ],
             );
