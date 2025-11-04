@@ -2,6 +2,18 @@
 
 SkinDiary is a mobile application designed to help users track their skin conditions and routines. It allows users to record skin entries, add photos, and manage their skincare products, all in one place. The app provides an easy way to document daily skin changes, monitor progress, and ensure that skincare routines are aligned with their skin's needs.
 
+## App Screenshots
+
+<div align="center">
+  <img src="assets/home.png" alt="Home Page" width="200"/>
+  <img src="assets/addentry.png" alt="Add Entry Page" width="200"/>
+  <img src="assets/shelf.png" alt="Shelf Page" width="200"/>
+  <img src="assets/history.png" alt="History" width="200"/>
+  <br/>
+  <em>From left to right: Home · Add Entry · My Shelf · History</em>
+</div>
+
+
 ## Existing Features
 
 ### 1. **Skin Entries**:
