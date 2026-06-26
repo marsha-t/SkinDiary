@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:skin_diary/models/skin_entry.dart';
 
-SnackBar buildUndoDeleteSnackBar({
-  required SkinEntry entry,
+SnackBar buildUndoSnackBar({
+  required String message,
   required Future<void> Function() onUndo,
 }) {
   return SnackBar(
-    content: const Text('Entry deleted'),
+    duration: const Duration(seconds: 4),
+    content: Text(message),
     action: SnackBarAction(
       label: 'Undo',
       onPressed: () {

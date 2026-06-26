@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:skin_diary/models/product.dart';
 import 'package:skin_diary/services/storage_product.dart';
+import 'package:skin_diary/utils/dialogs.dart';
 
 class AddEditProductScreen extends StatefulWidget {
   final Product? product;
@@ -60,33 +61,21 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   }
 
   Future<void> _deleteProduct() async {
-    if (widget.product == null) {
+    final product = widget.product;
+    if (product == null) {
       Navigator.pop(context); // Nothing to delete
       return;
     }
 
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Product'),
-        content: Text('Are you sure you want to delete "${widget.product!.name}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
+    final confirm = await showDeleteProductConfirmationDialog(
+      context,
+      product.name
     );
 
-    if (confirm == true) {
-      await StorageProduct.deleteProduct(widget.product!.id);
+    if (confirm) {
+      await StorageProduct.deleteProduct(product.id);
       if (!mounted) return;
-      Navigator.pop(context, widget.product); // Return deleted product
+      Navigator.pop(context, product); // Return deleted product
     }
   }
 

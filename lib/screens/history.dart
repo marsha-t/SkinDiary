@@ -52,8 +52,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
     if (result != null && result.action == EntryNavigationAction.deleted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        buildUndoDeleteSnackBar(
-          entry: result.entry,
+        buildUndoSnackBar(
+          message: 'Deleted entry from ${DateFormat.yMMMd().format(result.entry.date)}',
           onUndo: () async {
             setState(() {
               allEntries.add(result.entry);
@@ -61,7 +61,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             });
             await StorageEntry.saveEntry(result.entry);
           },
-        ),
+        )
       );
     }
   }
@@ -111,7 +111,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: const Icon(Icons.delete, color: Colors.white),
                 ),
-                confirmDismiss: (direction) => showDeleteConfirmationDialog(context),
+                confirmDismiss: (direction) => showDeleteEntryConfirmationDialog(context),
                 onDismissed: (_) => _deleteEntry(entry.id),
                 child: ListTile(
                 leading: photo != null 

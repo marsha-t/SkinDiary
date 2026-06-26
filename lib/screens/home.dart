@@ -69,8 +69,8 @@ class _HomeScreenState extends State<HomeScreen> {
     
     if (result != null && result.action == EntryNavigationAction.deleted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        buildUndoDeleteSnackBar(
-          entry: result.entry,
+        buildUndoSnackBar(
+          message: 'Deleted entry from ${DateFormat.yMMMd().format(result.entry.date)}',
           onUndo: () async {
             setState(() {
               _todayEntries.add(result.entry);
@@ -110,8 +110,8 @@ class _HomeScreenState extends State<HomeScreen> {
       _todayEntries.removeWhere((entry) => entry.id == id);
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      buildUndoDeleteSnackBar(
-        entry: deletedEntry,
+      buildUndoSnackBar(
+        message: 'Deleted entry from ${DateFormat.yMMMd().format(deletedEntry.date)}',
         onUndo: () async {
           setState(() {
             _todayEntries.add(deletedEntry);
@@ -192,7 +192,7 @@ class _HomeScreenState extends State<HomeScreen> {
         key: ValueKey(entry.id),
         direction: DismissDirection.endToStart,
         background: _buildDismissibleBackground(),
-        confirmDismiss: (direction) => showDeleteConfirmationDialog(context),
+        confirmDismiss: (direction) => showDeleteEntryConfirmationDialog(context),
         onDismissed: (_) => _deleteEntry(entry.id),
         child: ListTile(
           title: Text('Time: $formatted'),

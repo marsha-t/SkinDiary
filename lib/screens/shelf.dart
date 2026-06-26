@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:skin_diary/models/product.dart';
 import 'package:skin_diary/screens/add_edit_product.dart';
 import 'package:skin_diary/services/storage_product.dart';
+import 'package:skin_diary/utils/snackbar.dart';
+import 'package:skin_diary/utils/dialogs.dart';
 
 class ShelfScreen extends StatefulWidget {
   const ShelfScreen({super.key});
@@ -40,16 +42,13 @@ class _ShelfScreenState extends State<ShelfScreen> {
     _loadProducts();
     if (result != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Deleted "${result.name}"'),
-          action: SnackBarAction(
-            label: 'Undo',
-            onPressed: () async {
-              await StorageProduct.saveProduct(result);
+        buildUndoSnackBar(
+          message: 'Deleted "${result.name}"',
+          onUndo: () async {
+            await StorageProduct.saveProduct(result);
               _loadProducts();
-            },
-          ),
-        ),
+          }
+        )
       );
     }  
   }
@@ -65,15 +64,12 @@ class _ShelfScreenState extends State<ShelfScreen> {
     _loadProducts();
     if (result != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Deleted "${result.name}"'),
-          action: SnackBarAction(
-            label: 'Undo',
-            onPressed: () async {
-              await StorageProduct.saveProduct(result);
-              _loadProducts();
-            },
-          ),
+        buildUndoSnackBar(
+          message: 'Deleted "${result.name}"',
+          onUndo: () async {
+            await StorageProduct.saveProduct(result);
+            _loadProducts();
+          },
         ),
       );
     }
@@ -89,41 +85,19 @@ class _ShelfScreenState extends State<ShelfScreen> {
     if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Deleted "${deletedProduct.name}"'),
-        action: SnackBarAction(
-          label: 'Undo',
-          onPressed: () async {
-            await StorageProduct.saveProduct(deletedProduct);
-            setState(() {
-              _products.add(deletedProduct);
-              _products.sort((a, b) => a.name.compareTo(b.name));
-            });
-          },
-        ),
+      buildUndoSnackBar(
+        message: 'Deleted "${deletedProduct.name}"',
+        onUndo: () async {
+          await StorageProduct.saveProduct(deletedProduct);
+          setState(() {
+            _products.add(deletedProduct);
+            _products.sort((a, b) => a.name.compareTo(b.name));
+          });
+        },
       ),
     );
   }
 
-  Future<bool?> _confirmDelete(Product product) async {
-    return await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Product'),
-        content: Text('Are you sure you want to delete "${product.name}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-  }
   Map<String, List<Product>> _groupedByCategory(List<Product> products) {
     final Map<String, List<Product>> grouped = {};
 
@@ -177,7 +151,7 @@ class _ShelfScreenState extends State<ShelfScreen> {
                   key: ValueKey(product.id),
                   direction: DismissDirection.endToStart,
                   background: _buildDismissibleBackground(),
-                  confirmDismiss: (_) => _confirmDelete(product),
+                  confirmDismiss: (_) => showDeleteProductConfirmationDialog(context, product.name),
                   onDismissed: (_) => _deleteProduct(product.id),
                   child: ListTile(
                     title: Text(product.name),
