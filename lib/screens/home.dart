@@ -84,10 +84,10 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void>  _navigateToHistory() async {
+  Future<void>  _navigateToTimeline() async {
     await Navigator.pushNamed(
       context, 
-      AppRoutes.history,
+      AppRoutes.timeline,
     );
     if (!mounted) return;
     await _loadEntries();
@@ -206,8 +206,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildActionButtons() => Column(
     children: [
       ElevatedButton(
-        onPressed: _navigateToHistory,
-        child: const Text('View History'),
+        onPressed: _navigateToTimeline,
+        child: const Text('View Timeline'),
       ),
       const SizedBox(height: 8),
       ElevatedButton(

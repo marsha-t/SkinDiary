@@ -9,36 +9,35 @@ import 'package:skin_diary/screens/entry_details.dart';
 import 'package:skin_diary/screens/add_edit_entry.dart';
 import 'package:skin_diary/navigation/entry_navigation_result.dart';
 
-class HistoryScreen extends StatefulWidget {
-  const HistoryScreen({super.key});
+class TimelineScreen extends StatefulWidget {
+  const TimelineScreen({super.key});
 
   @override
-  State<HistoryScreen> createState() => _HistoryScreenState();
+  State<TimelineScreen> createState() => _TimelineScreenState();
 }
 
-class _HistoryScreenState extends State<HistoryScreen> {
-  List<SkinEntry> allEntries = [];
+class _TimelineScreenState extends State<TimelineScreen> {
+  
+  // State
+  List<SkinEntry> _allEntries = [];
 
+  // Lifecycle
   @override
   void initState() {
     super.initState();
     _loadEntries();
   }
 
+  // Data loading
   Future<void> _loadEntries() async {
     final loadedEntries = await StorageEntry.getAllEntries();
     
     if (!mounted) return;
 
-    setState(() => allEntries = loadedEntries);
+    setState(() => _allEntries = loadedEntries);
   }
   
-  Future<void> _deleteEntry(String id) async {
-    await StorageEntry.deleteEntry(id);
-    if (!mounted) return;
-    await _loadEntries();
-  }
-
+  // Navigation
   Future<void> _navigateToDetails(SkinEntry entry) async {
     final result = await Navigator.push<EntryNavigationResult>(
       context, 
@@ -51,18 +50,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     await _loadEntries();
 
     if (result != null && result.action == EntryNavigationAction.deleted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        buildUndoSnackBar(
-          message: 'Deleted entry from ${DateFormat.yMMMd().format(result.entry.date)}',
-          onUndo: () async {
-            setState(() {
-              allEntries.add(result.entry);
-              allEntries.sort((a, b) => b.date.compareTo(a.date));
-            });
-            await StorageEntry.saveEntry(result.entry);
-          },
-        )
-      );
+      _showUndoDeleteEntrySnackBar(result.entry);
     }
   }
 
@@ -77,12 +65,39 @@ class _HistoryScreenState extends State<HistoryScreen> {
     await _loadEntries();
   }
 
+  // Entry actions
+  Future<void> _deleteEntry(String id) async {
+    final deletedEntry = _allEntries.firstWhere((entry) => entry.id == id);
+
+    await StorageEntry.deleteEntry(id);
+    
+    if (!mounted) return;
+    
+    await _loadEntries();
+
+    _showUndoDeleteEntrySnackBar(deletedEntry);
+  }
+
+
+  void _showUndoDeleteEntrySnackBar(SkinEntry entry) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      buildUndoSnackBar(
+        message: 'Deleted entry from ${DateFormat.yMMMd().format(entry.date)}',
+        onUndo: () async {
+          await StorageEntry.saveEntry(entry);
+          if (mounted) await _loadEntries();
+        },
+      ),
+    );
+  }
+
+  // Build
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('History')),
+      appBar: AppBar(title: const Text('Timeline')),
       body: SafeArea(
-        child: allEntries.isEmpty
+        child: _allEntries.isEmpty
         ? const Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -96,11 +111,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
         )
         : ListView.builder(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            itemCount: allEntries.length,
+            itemCount: _allEntries.length,
             itemBuilder: (context, index) {
-              final entry = allEntries[index];
-              final formatted = DateFormat('h:mm a').format(entry.date);
-              final photo = entry.photos.isNotEmpty ? entry.photos.first['path'] : null;
+              final entry = _allEntries[index];
+              final formatted = DateFormat('MMM d, y - h:mm a').format(entry.date);
+              final photoPath = entry.photos.isNotEmpty ? entry.photos.first['path'] : null;
+              final photoFile = photoPath != null ? File(photoPath) : null;
+              final hasPhotoFile = photoFile != null && photoFile.existsSync();
 
               return Dismissible(
                 key: ValueKey(entry.id),
@@ -114,15 +131,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 confirmDismiss: (direction) => showDeleteEntryConfirmationDialog(context),
                 onDismissed: (_) => _deleteEntry(entry.id),
                 child: ListTile(
-                leading: photo != null 
-                  ? Image.file(
-                    File(photo),
-                    width: 50,
-                    height: 50,
-                    fit: BoxFit.cover,
-                  )
-                  : const Icon(Icons.image_not_supported),
-                title: Text('Time: $formatted'),
+                  leading: hasPhotoFile 
+                    ? Image.file(
+                      photoFile,
+                      width: 50,
+                      height: 50,
+                      fit: BoxFit.cover,
+                    )
+                    : const Icon(Icons.image_not_supported),
+                title: Text(formatted),
                 subtitle: Text('Rating: ${entry.rating} | Tags: ${entry.tags.join(', ')}'),
                 onTap: () => _navigateToDetails(entry)
               )
