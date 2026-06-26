@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:uuid/uuid.dart';
 import 'package:skin_diary/models/product.dart';
 import 'package:skin_diary/services/storage_product.dart';
 import 'package:skin_diary/utils/dialogs.dart';
@@ -14,6 +15,8 @@ class AddEditProductScreen extends StatefulWidget {
 }
 
 class _AddEditProductScreenState extends State<AddEditProductScreen> {
+
+  // State
   final _formKey = GlobalKey<FormState>();
   late String _name;
   late String _brand;
@@ -24,6 +27,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   List<String>? _keyIngredients = [];
   String? _productType;
 
+  // Lifecycle
   @override
   void initState() {
     super.initState();
@@ -37,13 +41,15 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     _productType = widget.product?.productType ?? '';
   }
   
+  // Product actions
   Future<void> _saveProduct() async {
     if (!_formKey.currentState!.validate()) return;
     _formKey.currentState!.save();
-
+    
     final now = DateTime.now();
+    const uuid = Uuid();
     final newProduct = Product(
-      id: widget.product?.id ?? now.toIso8601String(),
+      id: widget.product?.id ?? uuid.v4(),
       name: _name,
       brand: _brand,
       notes: _notes,
@@ -79,6 +85,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     }
   }
 
+  // Build
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.product != null;
@@ -127,34 +134,39 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     );
   }
 
+  // UI Builders
   Widget _buildNameField() => TextFormField(
     initialValue: _name,
     decoration: const InputDecoration(labelText: 'Product Name'),
-    validator: (value) => value == null || value.isEmpty ? 'Enter a name' : null,
-    onSaved: (value) => _name = value ?? '',
+    validator: (value) =>
+      value == null || value.trim().isEmpty ? 'Enter a name' : null,
+    onSaved: (value) => _name = value?.trim() ?? '',
   );
 
   Widget _buildBrandField() => TextFormField(
     initialValue: _brand,
     decoration: const InputDecoration(labelText: 'Brand'),
-    onSaved: (value) => _brand = value ?? '',
+    onSaved: (value) => _brand = value?.trim() ?? '',
   );
 
   Widget _buildProductTypeField() => TextFormField(
     initialValue: _productType,
     decoration: const InputDecoration(labelText: 'Product Type (e.g. Serum, Cleanser)'),
-    onSaved: (value) => _productType = value,
+    onSaved: (value) {
+      final trimmed = value?.trim();
+      _productType = (trimmed == null || trimmed.isEmpty) ? null : trimmed;
+    },
   );
 
   Widget _buildCategoriesField() => TextFormField(
     initialValue: _categories.join(', '),
     decoration: const InputDecoration(labelText: 'Categories (comma-separated)'),
     onSaved: (value) {
-      _categories = value!
-          .split(',')
-          .map((e) => e.trim())
-          .where((e) => e.isNotEmpty)
-          .toList();
+      _categories = (value ?? '')
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
     },
   );
 
@@ -163,9 +175,14 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     decoration: const InputDecoration(labelText: 'Key Ingredients (comma-separated)'),
     onSaved: (value) {
       final input = value?.trim();
-      _keyIngredients = (input?.isEmpty ?? true)
+
+      _keyIngredients = (input == null || input.isEmpty)
           ? null
-          : input!.split(',').map((e) => e.trim()).toList();
+          : input
+              .split(',')
+              .map((e) => e.trim())
+              .where((e) => e.isNotEmpty)
+              .toList();
     },
   );
 
@@ -194,6 +211,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     initialValue: _notes,
     decoration: const InputDecoration(labelText: 'Notes'),
     maxLines: 3,
-    onSaved: (value) => _notes = value ?? '',
+    onSaved: (value) => _notes = value?.trim() ?? '',
   );
 }

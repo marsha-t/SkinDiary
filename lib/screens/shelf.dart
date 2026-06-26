@@ -110,10 +110,6 @@ class _ShelfScreenState extends State<ShelfScreen> {
       }
     }
 
-    for (final list in grouped.values) {
-      list.sort((a, b) => a.name.compareTo(b.name));
-    }
-
     return grouped;
   }
 

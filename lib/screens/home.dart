@@ -68,22 +68,21 @@ class _HomeScreenState extends State<HomeScreen> {
     await _loadEntries();
     
     if (result != null && result.action == EntryNavigationAction.deleted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        buildUndoSnackBar(
-          message: 'Deleted entry from ${DateFormat.yMMMd().format(result.entry.date)}',
-          onUndo: () async {
-            setState(() {
-              _todayEntries.add(result.entry);
-              _todayEntries.sort((a, b) => b.date.compareTo(a.date));
-            });
-            await StorageEntry.saveEntry(result.entry);
-            if (mounted) await _loadEntries();
-          },
-        ),
-      );
+        _showUndoDeleteEntrySnackBar(result.entry);
     }
   }
 
+  void _showUndoDeleteEntrySnackBar(SkinEntry entry) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      buildUndoSnackBar(
+        message: 'Deleted entry from ${DateFormat.yMMMd().format(entry.date)}',
+        onUndo: () async {
+          await StorageEntry.saveEntry(entry);
+          if (mounted) await _loadEntries();
+        },
+      ),
+    );
+  }
   Future<void>  _navigateToTimeline() async {
     await Navigator.pushNamed(
       context, 
@@ -104,24 +103,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _deleteEntry(String id) async {
     final deletedEntry = _todayEntries.firstWhere((e) => e.id == id);
+
     await StorageEntry.deleteEntryRecord(id);
+    
     if (!mounted) return;
-    setState(() {
-      _todayEntries.removeWhere((entry) => entry.id == id);
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      buildUndoSnackBar(
-        message: 'Deleted entry from ${DateFormat.yMMMd().format(deletedEntry.date)}',
-        onUndo: () async {
-          setState(() {
-            _todayEntries.add(deletedEntry);
-            _todayEntries.sort((a, b) => b.date.compareTo(a.date));
-          });
-          await StorageEntry.saveEntry(deletedEntry);
-          if (mounted) await _loadEntries();
-        },
-      ),
-    );
+    
+    await _loadEntries();
+    
+    _showUndoDeleteEntrySnackBar(deletedEntry);
   }
 
   Future<void> exportDataAsJson() async {

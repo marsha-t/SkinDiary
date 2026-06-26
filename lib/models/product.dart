@@ -52,4 +52,30 @@ class Product {
       notes: map['notes'],
     );
   }
+
+  Product copyWith({
+    String? id,
+    String? name,
+    List<String>? categories,
+    DateTime? dateAdded,
+    DateTime? dateOpened,
+    DateTime? expirationDate,
+    List<String>? keyIngredients,
+    String? brand,
+    String? productType,
+    String? notes,
+  }) {
+    return Product(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      categories: categories ?? this.categories,
+      dateAdded: dateAdded ?? this.dateAdded,
+      dateOpened: dateOpened ?? this.dateOpened,
+      expirationDate: expirationDate ?? this.expirationDate,
+      keyIngredients: keyIngredients ?? this.keyIngredients,
+      brand: brand ?? this.brand,
+      productType: productType ?? this.productType,
+      notes: notes ?? this.notes,
+    );
+  }
 }

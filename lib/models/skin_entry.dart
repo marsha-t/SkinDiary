@@ -50,4 +50,24 @@ class SkinEntry {
         : [],
     );
   }
+
+  SkinEntry copyWith({
+    String? id,
+    DateTime? date,
+    List<Map<String, String>>? photos,
+    int? rating,
+    List<String>? tags,
+    String? notes,
+    List<Product>? productsUsed,
+  }) {
+    return SkinEntry(
+      id: id ?? this.id,
+      date: date ?? this.date,
+      photos: photos ?? this.photos,
+      rating: rating ?? this.rating,
+      tags: tags ?? this.tags,
+      notes: notes ?? this.notes,
+      productsUsed: productsUsed ?? this.productsUsed,
+    );
+  }
 }

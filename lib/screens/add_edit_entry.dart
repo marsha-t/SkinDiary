@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:uuid/uuid.dart';
 import 'package:skin_diary/utils/dialogs.dart';
 import 'package:skin_diary/models/product.dart';
 import 'package:skin_diary/models/skin_entry.dart';
@@ -23,8 +24,9 @@ class AddEditEntryScreen extends StatefulWidget {
 }
 
 class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
+  
+  // State
   final _formKey = GlobalKey<FormState>();
-
   late DateTime _date;
   late int _rating;
   late List<String> _tags;
@@ -33,9 +35,7 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
   String _selectedLabel = 'Full Face';
   List<Product> _selectedProducts = [];
 
-  final _tagsController = TextEditingController();
-  final _notesController = TextEditingController();
-
+  // Lifecycle
   @override
   void initState() {
     super.initState();
@@ -44,20 +44,12 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
     _rating = entry?.rating ?? 3;
     _tags = entry?.tags ?? [];
     _notes = entry?.notes ?? '';
-    _labeledPhotos = entry?.photos ?? [];
-    _selectedProducts = entry?.productsUsed ?? [];
-    _tagsController.text = _tags.join(', ');
-    _notesController.text = _notes;
+    _labeledPhotos = List<Map<String, String>>.from(entry?.photos ?? []);
+    _selectedProducts = List<Product>.from(entry?.productsUsed ?? []);
   }
 
-  @override
-  void dispose() {
-    _tagsController.dispose();
-    _notesController.dispose();
-    super.dispose();
-  }
-
-  Future<String> saveImagePermanently(String tempImagePath) async {
+  // Persistence
+  Future<String> _saveImagePermanently(String tempImagePath) async {
     final directory = await getApplicationDocumentsDirectory();
     final fileName = path.basename(tempImagePath);
     final newPath = path.join(directory.path, fileName);
@@ -65,11 +57,13 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
     return newImage.path;
   }
 
+  // Entry actions
   Future<void> _saveEntry() async {
     if (!_formKey.currentState!.validate()) return;
     _formKey.currentState!.save();
-
-    final id = widget.existingEntry?.id ?? DateTime.now().millisecondsSinceEpoch.toString();
+    
+    const uuid = Uuid();
+    final id = widget.existingEntry?.id ?? uuid.v4();
 
     final entry = SkinEntry(
       id: id,
@@ -87,6 +81,19 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
     }
   }
   
+  Future<void> _deleteEntry() async {
+    final entry = widget.existingEntry;
+    if (entry == null) return;
+
+    final confirm = await showDeleteEntryConfirmationDialog(context);
+    if (confirm) {
+      await StorageEntry.deleteEntryRecord(entry.id);
+      if (!mounted) return;
+      Navigator.pop(context, EntryNavigationResult.deleted(entry));
+    }
+  }
+
+  // Date/time actions
   Future<void> _selectDateTime() async {
     final pickedDate = await showDatePicker(
       context: context,
@@ -115,6 +122,7 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
     });
   }
 
+  // Photo actions
   Future<void>  _pickImage() async {
     final source = await showDialog<ImageSource>(
       context: context,
@@ -132,20 +140,26 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
         ],
       )
     );
+
+    if (!mounted) return ;
+
     if (source != null) {
       final pickedFile = await ImagePicker().pickImage(source: source);
-      if (pickedFile != null) {
-        final savedPath = await saveImagePermanently(pickedFile.path);
-        setState(() {
-          _labeledPhotos.add({
-            'path': savedPath,
-            'label': _selectedLabel,
-          });
+      if (!mounted || pickedFile == null) return;
+
+      final savedPath = await _saveImagePermanently(pickedFile.path);
+      if (!mounted) return;
+
+      setState(() {
+        _labeledPhotos.add({
+          'path': savedPath,
+          'label': _selectedLabel,
         });
-      }
+      });
     }
   }
 
+  // Product actions
   Future<void> _selectProducts() async {
     final result = await Navigator.push<List<Product>>(
       context,
@@ -163,19 +177,7 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
     }
   }
 
-  Future<void> _deleteEntry() async {
-    final entry = widget.existingEntry;
-    if (entry == null) return;
-
-    final confirm = await showDeleteEntryConfirmationDialog(context);
-    if (confirm) {
-      final deleted = widget.existingEntry!;
-      await StorageEntry.deleteEntryRecord(entry.id);
-      if (!mounted) return;
-      Navigator.pop(context, EntryNavigationResult.deleted(deleted));
-    }
-  }
-
+  // Build
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -220,21 +222,28 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
     );
   }
 
+  // UI builders
   Widget _buildTagField() {
     return TextFormField(
-      controller: _tagsController,
+      initialValue: _tags.join(', '),
       maxLines: 2,
       decoration: const InputDecoration(labelText: 'Tags (comma separated)'),
-      onSaved: (value) => _tags = value!.split(',').map((e) => e.trim()).toList(),
+      onSaved: (value) {
+        _tags = (value ?? '')
+            .split(',')
+            .map((e) => e.trim())
+            .where((e) => e.isNotEmpty)
+            .toList();
+      },
     );
   }
 
   Widget _buildNotesField() {
     return TextFormField(
-      controller: _notesController,
+      initialValue: _notes,
       maxLines: 3,
       decoration: const InputDecoration(labelText: 'Notes'),
-      onSaved: (value) => _notes = value ?? '',
+      onSaved: (value) => _notes = value?.trim() ?? '',
     );
   }
 
@@ -246,7 +255,7 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
           children: [
             Expanded(
               child: Text(
-                'Date: ${DateFormat('MMMM d, yyyy – h:mm a').format(_date)}',
+                'Date: ${DateFormat('MMMM d, yyyy - h:mm a').format(_date)}',
               ),
             ),
             TextButton(
@@ -284,8 +293,11 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
         const SizedBox(height: 10),
         Wrap(
           spacing: 8,
-          children: _labeledPhotos.map((photo) {
+          children: _labeledPhotos.asMap().entries.map((entry) {
+            final index = entry.key;
+            final photo = entry.value;
             final file = File(photo['path']!);
+
             return Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -299,6 +311,15 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
                         child: const Icon(Icons.broken_image, size: 40),
                       ),
                 Text(photo['label'] ?? ''),
+                IconButton(
+                  tooltip: 'Remove photo from entry',
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  onPressed: () {
+                    setState(() {
+                      _labeledPhotos.removeAt(index);
+                    });
+                  },
+                ),
               ],
             );
           }).toList(),

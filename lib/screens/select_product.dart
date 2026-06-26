@@ -21,18 +21,21 @@ class _SelectProductScreenState extends State<SelectProductScreen> {
     _loadProducts();
   }
   
-  void _loadProducts() async {
+  Future<void> _loadProducts() async {
     final products = await StorageProduct.getAllProducts();
+
+    if (!mounted) return;
+
     setState(() {
       _allProducts = products;
-      _selectedProducts = widget.initialSelection ?? [];
+      _selectedProducts = List<Product>.from(widget.initialSelection ?? []);
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Select Product(s)')),
+      appBar: AppBar(title: const Text('Select Product(s)')),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
