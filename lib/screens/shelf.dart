@@ -13,91 +13,87 @@ class ShelfScreen extends StatefulWidget {
 }
 
 class _ShelfScreenState extends State<ShelfScreen> {
-  final List <Product> _products = [];
-  Map<String, List<Product>> _categorizedProducts = {};
-  List<String> _categoryOrder = [];
 
+  // State
+  List<Product> _products = [];
+
+  // Lifecycle
   @override 
   void initState() {
     super.initState();
     _loadProducts();
   }
 
-  void _loadProducts() async {
+  // Data loading
+  Future<void> _loadProducts() async {
     final products = await StorageProduct.getAllProducts();
-    final grouped = _groupedByCategory(products);
+
+    if (!mounted) return;
 
     setState(() {
-      _categorizedProducts = grouped;
-      _categoryOrder = grouped.keys.toList()..sort(); // sort categories alphabetically
+      _products = products;
     });
   }
 
-  void _navigateToAddProduct() async {
-    final result = await Navigator.push(
+  // Navigation
+  Future<void> _navigateToAddProduct() async {
+    final result = await Navigator.push<Product>(
       context,
       MaterialPageRoute(builder: (_) => const AddEditProductScreen()),
     );
+
     if (!mounted) return;
-    _loadProducts();
+
+    await _loadProducts();
+
     if (result != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        buildUndoSnackBar(
-          message: 'Deleted "${result.name}"',
-          onUndo: () async {
-            await StorageProduct.saveProduct(result);
-              _loadProducts();
-          }
-        )
-      );
+      _showUndoDeleteProductSnackBar(result);
     }  
   }
 
-  void _navigateToEditProduct(Product product) async {
+  Future<void> _navigateToEditProduct(Product product) async {
     final result = await Navigator.push<Product>(
       context,
       MaterialPageRoute(
         builder: (_) => AddEditProductScreen(product: product),
       ),
     );
-     if (!mounted) return;
-    _loadProducts();
-    if (result != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        buildUndoSnackBar(
-          message: 'Deleted "${result.name}"',
-          onUndo: () async {
-            await StorageProduct.saveProduct(result);
-            _loadProducts();
-          },
-        ),
-      );
-    }
-  }
-
-  Future<void> _deleteProduct(String id) async {
-    final deletedProduct = _products.firstWhere((p) => p.id == id);
-    await StorageProduct.deleteProduct(id);
-    setState(() {
-      _products.removeWhere((p) => p.id == id);
-    });
 
     if (!mounted) return;
 
+    await _loadProducts();
+
+    if (result != null) {
+      _showUndoDeleteProductSnackBar(result);
+    }
+  }
+
+  // Product actions
+  Future<void> _deleteProduct(String id) async {
+    final deletedProduct = _products.firstWhere((p) => p.id == id);
+
+    await StorageProduct.deleteProduct(id);
+
+    if (!mounted) return;
+
+    await _loadProducts();
+
+    _showUndoDeleteProductSnackBar(deletedProduct);
+  }
+
+  void _showUndoDeleteProductSnackBar(Product product) {
     ScaffoldMessenger.of(context).showSnackBar(
       buildUndoSnackBar(
-        message: 'Deleted "${deletedProduct.name}"',
+        message: 'Deleted "${product.name}"',
         onUndo: () async {
-          await StorageProduct.saveProduct(deletedProduct);
-          setState(() {
-            _products.add(deletedProduct);
-            _products.sort((a, b) => a.name.compareTo(b.name));
-          });
+          await StorageProduct.saveProduct(product);
+          if (mounted) await _loadProducts();
         },
       ),
     );
   }
 
+  // Helpers
   Map<String, List<Product>> _groupedByCategory(List<Product> products) {
     final Map<String, List<Product>> grouped = {};
 
@@ -121,17 +117,21 @@ class _ShelfScreenState extends State<ShelfScreen> {
     return grouped;
   }
 
+  // Build
   @override
   Widget build(BuildContext context) {
+    final categorizedProducts = _groupedByCategory(_products);
+    final categoryOrder = categorizedProducts.keys.toList()..sort();
+
     return Scaffold(
       appBar: AppBar(title: const Text('My Shelf')),
-      body: _categorizedProducts.isEmpty
-    ? const Center(child: Text('No products added yet.'))
-    : ListView.builder(
-        itemCount: _categoryOrder.length,
+      body: _products.isEmpty
+      ? const Center(child: Text('No products added yet.'))
+      : ListView.builder(
+        itemCount: categoryOrder.length,
         itemBuilder: (context, index) {
-          final category = _categoryOrder[index];
-          final products = _categorizedProducts[category]!;
+          final category = categoryOrder[index];
+          final products = categorizedProducts[category]!;
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -148,7 +148,7 @@ class _ShelfScreenState extends State<ShelfScreen> {
               ),
               ...products.map((product) {
                 return Dismissible(
-                  key: ValueKey(product.id),
+                  key: ValueKey('${category}_${product.id}'),
                   direction: DismissDirection.endToStart,
                   background: _buildDismissibleBackground(),
                   confirmDismiss: (_) => showDeleteProductConfirmationDialog(context, product.name),
@@ -172,12 +172,11 @@ class _ShelfScreenState extends State<ShelfScreen> {
     );
   }
   
+  // UI builders
   Widget _buildDismissibleBackground() => Container(
     color: Colors.red,
     alignment: Alignment.centerRight,
     padding: const EdgeInsets.symmetric(horizontal: 20),
     child: const Icon(Icons.delete, color: Colors.white),
   );
-  
-  
 }
