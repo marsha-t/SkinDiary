@@ -5,10 +5,10 @@ SkinDiary is a mobile application designed to help users track their skin condit
 ## App Screenshots
 
 <div align="center">
-  <img src="assets/home.png" alt="Home Page" width="200"/>
-  <img src="assets/addentry.png" alt="Add Entry Page" width="200"/>
-  <img src="assets/shelf.png" alt="Shelf Page" width="200"/>
-  <img src="assets/history.png" alt="History" width="200"/>
+  <img src="doc/assets/home.png" alt="Home Page" width="200"/>
+  <img src="doc/assets/addentry.png" alt="Add Entry Page" width="200"/>
+  <img src="doc/assets/shelf.png" alt="Shelf Page" width="200"/>
+  <img src="doc/assets/history.png" alt="History" width="200"/>
   <br/>
   <em>From left to right: Home · Add Entry · My Shelf · History</em>
 </div>

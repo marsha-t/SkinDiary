@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'dart:convert';
-// import 'package:shared_preferences/shared_preferences.dart';
 import 'package:skin_diary/services/database_service.dart';
 import 'package:skin_diary/models/skin_entry.dart';
 
@@ -17,14 +16,10 @@ class StorageEntry {
       entries.add(entry);
     }
   final entryMap = entries.map((e) => e.toMap()).toList();
-  // final prefs = await SharedPreferences.getInstance();
-  // await prefs.setString(_key, jsonEncode(entryMap));
   await DatabaseService.setPreference(_key, jsonEncode(entryMap));
   }
   
   static Future<List<SkinEntry>> getAllEntries() async {
-    // final prefs = await SharedPreferences.getInstance();
-    // final entries = prefs.getString(_key);
     final entries = await DatabaseService.getPreference(_key);
     if (entries == null) return [];
     final List decoded = jsonDecode(entries);

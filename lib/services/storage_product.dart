@@ -1,5 +1,4 @@
 import 'dart:convert';
-// import 'package:shared_preferences/shared_preferences.dart';
 import 'package:skin_diary/services/database_service.dart';
 import 'package:skin_diary/models/product.dart';
 
@@ -16,15 +15,11 @@ class StorageProduct {
       all.add(product);
     }
     final encoded = jsonEncode(all.map((p) => p.toMap()).toList());
-    // final prefs = await SharedPreferences.getInstance();
-    // await prefs.setString(_key, encoded);
     await DatabaseService.setPreference(_key, encoded);
 
   }
 
   static Future<List<Product>> getAllProducts() async {
-    // final prefs = await SharedPreferences.getInstance();
-    // final raw = prefs.getString(_key);
     final raw = await DatabaseService.getPreference(_key);
     if (raw == null) return [];
     final List<dynamic> decoded = jsonDecode(raw);
@@ -35,14 +30,10 @@ class StorageProduct {
     final all = await getAllProducts();
     all.removeWhere((p) => p.id == id);
     final productMap = all.map((p) => p.toMap()).toList();
-    // final prefs = await SharedPreferences.getInstance();
-    // await prefs.setString(_key, jsonEncode(productMap));
     await DatabaseService.setPreference(_key, jsonEncode(productMap));
   }
 
   static Future<void> clearAllProducts() async {
-    // final prefs = await SharedPreferences.getInstance();
-    // await prefs.remove(_key);
     await DatabaseService.removePreference(_key);
   }
 }
