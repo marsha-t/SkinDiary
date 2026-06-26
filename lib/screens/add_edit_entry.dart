@@ -170,7 +170,7 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
     final confirm = await showDeleteEntryConfirmationDialog(context);
     if (confirm) {
       final deleted = widget.existingEntry!;
-      await StorageEntry.deleteEntry(entry.id);
+      await StorageEntry.deleteEntryRecord(entry.id);
       if (!mounted) return;
       Navigator.pop(context, EntryNavigationResult.deleted(deleted));
     }

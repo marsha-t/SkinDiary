@@ -104,7 +104,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _deleteEntry(String id) async {
     final deletedEntry = _todayEntries.firstWhere((e) => e.id == id);
-    await StorageEntry.deleteEntry(id);
+    await StorageEntry.deleteEntryRecord(id);
     if (!mounted) return;
     setState(() {
       _todayEntries.removeWhere((entry) => entry.id == id);

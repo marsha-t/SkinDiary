@@ -69,7 +69,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
   Future<void> _deleteEntry(String id) async {
     final deletedEntry = _allEntries.firstWhere((entry) => entry.id == id);
 
-    await StorageEntry.deleteEntry(id);
+    await StorageEntry.deleteEntryRecord(id);
     
     if (!mounted) return;
     

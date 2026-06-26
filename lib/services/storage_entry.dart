@@ -41,24 +41,28 @@ class StorageEntry {
     return null;
   }
 
-  static Future<void> deleteEntry(String id) async {
+  static Future<void> deleteEntryRecord(String id) async {
     final entries = await getAllEntries();
     final entryToDelete = _findEntryById(entries, id);
 
     if (entryToDelete == null) return;
     
-    for (final photo in entryToDelete.photos) {
+    entries.removeWhere((entry) => entry.id == id);
+
+    final entryMap = entries.map((e) => e.toMap()).toList();
+    await DatabaseService.setPreference(_key, jsonEncode(entryMap));
+  }
+
+  static Future<void> deleteEntryPhotoFiles(SkinEntry entry) async {
+    for (final photo in entry.photos) {
       final path = photo['path'];
       if (path == null) continue;
+
       final file = File(path);
       if (await file.exists()) {
         await file.delete();
       }
     }
-    entries.removeWhere((entry) => entry.id == id);
-
-    final entryMap = entries.map((e) => e.toMap()).toList();
-    await DatabaseService.setPreference(_key, jsonEncode(entryMap));
   }
 
   static Future<List<SkinEntry>> getTodayEntries() async {

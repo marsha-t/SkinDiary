@@ -49,7 +49,7 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen>
   Future<void> _deleteEntry() async {
     final confirm = await showDeleteEntryConfirmationDialog(context);
     if (confirm) {
-      await StorageEntry.deleteEntry(_entry.id);
+      await StorageEntry.deleteEntryRecord(_entry.id);
       if (!mounted) return;
       Navigator.pop(
         context, 
