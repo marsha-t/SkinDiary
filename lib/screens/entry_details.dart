@@ -5,6 +5,7 @@ import 'package:skin_diary/utils/dialogs.dart';
 import 'package:skin_diary/services/storage_entry.dart';
 import 'package:skin_diary/models/skin_entry.dart';
 import 'package:skin_diary/screens/add_edit_entry.dart';
+import 'package:skin_diary/navigation/entry_navigation_result.dart';
 
 class EntryDetailsScreen extends StatefulWidget {
   final SkinEntry entry;
@@ -26,16 +27,24 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen>
   }
 
   Future<void> _editEntry() async {
-    final updatedEntry = await Navigator.push(
+    final result = await Navigator.push<EntryNavigationResult>(
       context,
       MaterialPageRoute(
         builder: (context) => AddEditEntryScreen(existingEntry: _entry)
       )
     );
-    if (updatedEntry != null && mounted) {
-      setState(() => _entry = updatedEntry);
-      }
+
+    if (!mounted || result == null) return;
+
+    switch (result.action) {
+      case EntryNavigationAction.saved:
+        setState(() => _entry = result.entry);
+        break;
+      case EntryNavigationAction.deleted:
+        Navigator.pop(context, result);
+        break;
     }
+  }
   
   Future<void> _deleteEntry() async {
     final confirm = await showDeleteConfirmationDialog(context);
@@ -43,7 +52,9 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen>
       await StorageEntry.deleteEntry(_entry.id);
       if (!mounted) return;
       Navigator.pop(
-        context, _entry);
+        context, 
+        EntryNavigationResult.deleted(_entry),
+      );
     }
   }
 
@@ -60,7 +71,7 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen>
             onPressed: _editEntry,
           ),
           IconButton(
-            icon: Icon(Icons.delete),
+            icon: const Icon(Icons.delete),
             onPressed: _deleteEntry,
           )
         ]

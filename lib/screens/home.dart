@@ -10,10 +10,10 @@ import 'package:skin_diary/services/storage_entry.dart';
 import 'package:skin_diary/models/skin_entry.dart';
 import 'package:skin_diary/utils/snackbar.dart';
 import 'package:skin_diary/utils/dialogs.dart';
+import 'package:skin_diary/app/app_routes.dart';
 import 'package:skin_diary/screens/add_edit_entry.dart';
-import 'package:skin_diary/screens/history.dart';
 import 'package:skin_diary/screens/entry_details.dart';
-import 'package:skin_diary/screens/shelf.dart';
+import 'package:skin_diary/navigation/entry_navigation_result.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -31,9 +31,12 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadEntries();
   }
 
-  Future<void>  _loadEntries() async {
+  Future<void> _loadEntries() async {
     final newToday = await StorageEntry.getTodayEntries();
+    newToday.sort((a, b) => b.date.compareTo(a.date));
+
     if (!mounted) return;
+
     if (!listEquals(_todayEntries, newToday)) {
       setState(() {
         _todayEntries = newToday;
@@ -42,47 +45,39 @@ class _HomeScreenState extends State<HomeScreen> {
   }
   
   Future<void> _navigateToAdd() async {
-    final returnedEntry = await Navigator.push(
+    final result = await Navigator.push<EntryNavigationResult>(
       context, 
       MaterialPageRoute(builder: (context) => const AddEditEntryScreen()),
     );
-    if (!mounted) return;
-    _loadEntries();
-    if (returnedEntry != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        buildUndoDeleteSnackBar(
-          entry: returnedEntry,
-          onUndo: () async {
-            setState(() {
-              _todayEntries.add(returnedEntry);
-              _todayEntries.sort((a, b) => b.date.compareTo(a.date));
-            });
-            await StorageEntry.saveEntry(returnedEntry);
-            if (mounted) _loadEntries();
-          },
-        ),
-      );
+
+    if (!mounted || result == null) return;
+
+    if (result.action == EntryNavigationAction.saved) {
+      await _loadEntries();
     }
   }
 
   Future<void> _navigateToDetails(SkinEntry entry) async {
-    final returnedEntry = await Navigator.push(
+    final result = await Navigator.push<EntryNavigationResult>(
       context, 
       MaterialPageRoute(builder: (context) => EntryDetailsScreen(entry: entry)),
     );
-    if (!mounted) return;
-    _loadEntries();
-    if (returnedEntry != null) {
+
+    if (!mounted || result == null) return;
+
+    await _loadEntries();
+    
+    if (result.action == EntryNavigationAction.deleted) {
       ScaffoldMessenger.of(context).showSnackBar(
         buildUndoDeleteSnackBar(
-          entry: returnedEntry,
+          entry: result.entry,
           onUndo: () async {
             setState(() {
-              _todayEntries.add(returnedEntry);
+              _todayEntries.add(result.entry);
               _todayEntries.sort((a, b) => b.date.compareTo(a.date));
             });
-            await StorageEntry.saveEntry(returnedEntry);
-            if (mounted) _loadEntries();
+            await StorageEntry.saveEntry(result.entry);
+            if (mounted) await _loadEntries();
           },
         ),
       );
@@ -90,19 +85,21 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void>  _navigateToHistory() async {
-    await Navigator.push(
+    await Navigator.pushNamed(
       context, 
-      MaterialPageRoute(builder: (context) => const HistoryScreen()),
+      AppRoutes.history,
     );
     if (!mounted) return;
-    _loadEntries();
+    await _loadEntries();
   }
 
   Future<void> _navigateToShelf() async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const ShelfScreen()),
+    await Navigator.pushNamed(
+      context, 
+      AppRoutes.productShelf
     );
+    // No mounted check needed: nothing uses context or updates state after await
+    // No reload needed: product shelf changes do not affect today's entry list
   }
 
   Future<void> _deleteEntry(String id) async {
@@ -121,7 +118,7 @@ class _HomeScreenState extends State<HomeScreen> {
             _todayEntries.sort((a, b) => b.date.compareTo(a.date));
           });
           await StorageEntry.saveEntry(deletedEntry);
-          if (mounted) _loadEntries();
+          if (mounted) await _loadEntries();
         },
       ),
     );

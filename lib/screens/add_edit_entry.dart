@@ -10,7 +10,7 @@ import 'package:skin_diary/services/storage_entry.dart';
 import 'package:skin_diary/widgets/photo_label_dropdown.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
-
+import 'package:skin_diary/navigation/entry_navigation_result.dart';
 
 
 class AddEditEntryScreen extends StatefulWidget {
@@ -82,7 +82,9 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
     );
 
     await StorageEntry.saveEntry(entry);
-    if (mounted) Navigator.pop(context, entry);
+    if (mounted) {
+      Navigator.pop(context, EntryNavigationResult.saved(entry));
+    }
   }
   
   Future<void> _selectDateTime() async {
@@ -162,17 +164,15 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
   }
 
   Future<void> _deleteEntry() async {
-    if (widget.existingEntry == null) {
-      Navigator.pop(context);
-    } 
-    else {
-      final confirm = await showDeleteConfirmationDialog(context);
-      if (confirm) {
-        final deleted = widget.existingEntry!;
-        await StorageEntry.deleteEntry(widget.existingEntry!.id);
-        if (!mounted) return;
-        Navigator.pop(context, deleted);
-      }
+    final entry = widget.existingEntry;
+    if (entry == null) return;
+
+    final confirm = await showDeleteConfirmationDialog(context);
+    if (confirm) {
+      final deleted = widget.existingEntry!;
+      await StorageEntry.deleteEntry(entry.id);
+      if (!mounted) return;
+      Navigator.pop(context, EntryNavigationResult.deleted(deleted));
     }
   }
 

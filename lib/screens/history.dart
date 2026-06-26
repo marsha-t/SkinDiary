@@ -7,6 +7,7 @@ import 'package:skin_diary/models/skin_entry.dart';
 import 'package:skin_diary/utils/snackbar.dart';
 import 'package:skin_diary/screens/entry_details.dart';
 import 'package:skin_diary/screens/add_edit_entry.dart';
+import 'package:skin_diary/navigation/entry_navigation_result.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -26,58 +27,55 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   Future<void> _loadEntries() async {
     final loadedEntries = await StorageEntry.getAllEntries();
+    loadedEntries.sort((a, b) => b.date.compareTo(a.date));
+
     if (!mounted) return;
+
     setState(() => allEntries = loadedEntries);
   }
   
   Future<void> _deleteEntry(String id) async {
     await StorageEntry.deleteEntry(id);
     if (!mounted) return;
-    _loadEntries();
+    await _loadEntries();
   }
 
   Future<void> _navigateToDetails(SkinEntry entry) async {
-    final returnedEntry = await Navigator.push(
+    final result = await Navigator.push<EntryNavigationResult>(
       context, 
       MaterialPageRoute(builder: (context) => EntryDetailsScreen(entry: entry)),
     );
-    if (!mounted) return;
-    _loadEntries();
-    if (returnedEntry != null) {
+
+    if (!mounted || result == null) return;
+
+    await _loadEntries();
+
+    if (result.action == EntryNavigationAction.deleted) {
       ScaffoldMessenger.of(context).showSnackBar(
         buildUndoDeleteSnackBar(
-          entry: returnedEntry,
+          entry: result.entry,
           onUndo: () async {
             setState(() {
-              allEntries.add(returnedEntry);
+              allEntries.add(result.entry);
               allEntries.sort((a, b) => b.date.compareTo(a.date));
             });
-            await StorageEntry.saveEntry(returnedEntry);
+            await StorageEntry.saveEntry(result.entry);
           },
         ),
       );
     }
   }
 
-Future<void> _navigateToAdd() async {
-  final returnedEntry = await Navigator.push(
-    context,
-    MaterialPageRoute(builder: (context) => const AddEditEntryScreen()),
-  );
-
-  if (!mounted) return;
-
-  if (returnedEntry != null) {
-    setState(() {
-      allEntries.add(returnedEntry);
-      allEntries.sort((a, b) => b.date.compareTo(a.date));
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('New entry added')),
+  Future<void> _navigateToAdd() async {
+    final result = await Navigator.push<EntryNavigationResult>(
+      context,
+      MaterialPageRoute(builder: (context) => const AddEditEntryScreen()),
     );
+
+    if (!mounted || result == null) return;
+
+    await _loadEntries();
   }
-}
 
   @override
   Widget build(BuildContext context) {
