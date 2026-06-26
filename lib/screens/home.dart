@@ -33,7 +33,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadEntries() async {
     final newToday = await StorageEntry.getTodayEntries();
-    newToday.sort((a, b) => b.date.compareTo(a.date));
 
     if (!mounted) return;
 
@@ -63,11 +62,12 @@ class _HomeScreenState extends State<HomeScreen> {
       MaterialPageRoute(builder: (context) => EntryDetailsScreen(entry: entry)),
     );
 
-    if (!mounted || result == null) return;
-
+    if (!mounted) return;
+    
+    // Reload regardless of result. EntryDetailsScreen may update an entry, stay open, then return null when the user backs out
     await _loadEntries();
     
-    if (result.action == EntryNavigationAction.deleted) {
+    if (result != null && result.action == EntryNavigationAction.deleted) {
       ScaffoldMessenger.of(context).showSnackBar(
         buildUndoDeleteSnackBar(
           entry: result.entry,

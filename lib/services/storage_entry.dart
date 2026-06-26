@@ -22,31 +22,41 @@ class StorageEntry {
   static Future<List<SkinEntry>> getAllEntries() async {
     final entries = await DatabaseService.getPreference(_key);
     if (entries == null) return [];
+
     final List decoded = jsonDecode(entries);
-    return decoded.map((e) => SkinEntry.fromMap(e)).toList();
+    final parsedEntries = decoded
+        .map((e) => SkinEntry.fromMap(e))
+        .toList();
+
+    parsedEntries.sort((a, b) => b.date.compareTo(a.date));
+
+    return parsedEntries;
+  }
+
+  static SkinEntry? _findEntryById(List<SkinEntry> entries, String id) {
+    for (final entry in entries) {
+      if (entry.id == id) return entry;
+    }
+
+    return null;
   }
 
   static Future<void> deleteEntry(String id) async {
     final entries = await getAllEntries();
-    SkinEntry? entryToDelete;
-    try {
-      entryToDelete = entries.firstWhere((e) => e.id == id);
-    } catch (_) {
-      entryToDelete = null;
-    }
-    if (entryToDelete != null) {
-      for (final photo in entryToDelete.photos) {
-        final path = photo['path'];
-        if (path != null) {
-          final file = File(path);
-          if (await file.exists()) {
-            await file.delete();
-          }
-        }
+    final entryToDelete = _findEntryById(entries, id);
+
+    if (entryToDelete == null) return;
+    
+    for (final photo in entryToDelete.photos) {
+      final path = photo['path'];
+      if (path == null) continue;
+      final file = File(path);
+      if (await file.exists()) {
+        await file.delete();
       }
-      entries.remove(entryToDelete);
     }
-    // entries.removeWhere((e) => e.id == id);
+    entries.removeWhere((entry) => entry.id == id);
+
     final entryMap = entries.map((e) => e.toMap()).toList();
     await DatabaseService.setPreference(_key, jsonEncode(entryMap));
   }
@@ -54,6 +64,7 @@ class StorageEntry {
   static Future<List<SkinEntry>> getTodayEntries() async {
     final all = await getAllEntries();
     final now = DateTime.now();
+  
     return all.where((e) =>
       e.date.year == now.year &&
       e.date.month == now.month && 

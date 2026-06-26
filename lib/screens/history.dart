@@ -27,8 +27,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   Future<void> _loadEntries() async {
     final loadedEntries = await StorageEntry.getAllEntries();
-    loadedEntries.sort((a, b) => b.date.compareTo(a.date));
-
+    
     if (!mounted) return;
 
     setState(() => allEntries = loadedEntries);
@@ -46,11 +45,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
       MaterialPageRoute(builder: (context) => EntryDetailsScreen(entry: entry)),
     );
 
-    if (!mounted || result == null) return;
+    if (!mounted) return;
 
+    // Reload regardless of result. EntryDetailsScreen may update an entry, stay open, then return null when the user backs out
     await _loadEntries();
 
-    if (result.action == EntryNavigationAction.deleted) {
+    if (result != null && result.action == EntryNavigationAction.deleted) {
       ScaffoldMessenger.of(context).showSnackBar(
         buildUndoDeleteSnackBar(
           entry: result.entry,
