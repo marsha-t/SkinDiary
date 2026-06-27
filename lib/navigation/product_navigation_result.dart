@@ -1,6 +1,6 @@
 import 'package:skin_diary/models/product.dart';
 
-enum ProductNavigationAction { saved, deleted }
+enum ProductNavigationAction { saved, archived, deletedPermanently }
 
 class ProductNavigationResult {
   final ProductNavigationAction action;
@@ -11,6 +11,9 @@ class ProductNavigationResult {
   const ProductNavigationResult.saved(this.product)
     : action = ProductNavigationAction.saved;
 
-  const ProductNavigationResult.deleted(this.product)
-    : action = ProductNavigationAction.deleted;
+  const ProductNavigationResult.archived(this.product)
+    : action = ProductNavigationAction.archived;
+
+  const ProductNavigationResult.deletedPermanently(this.product)
+    : action = ProductNavigationAction.deletedPermanently;
 }

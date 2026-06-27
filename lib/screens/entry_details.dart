@@ -129,7 +129,8 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> {
           children:
               _entry.productsUsed.map((product) {
                 final brand = product.brand?.trim() ?? '';
-                final label = brand.isEmpty ? product.name : '$brand - ${product.name}';
+                final label =
+                    brand.isEmpty ? product.name : '$brand - ${product.name}';
                 return Chip(label: Text(label));
               }).toList(),
         ),

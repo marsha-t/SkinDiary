@@ -43,15 +43,16 @@ Future<bool> showDeleteEntryConfirmationDialog(BuildContext context) {
   );
 }
 
-Future<bool> showDeleteProductConfirmationDialog(
+Future<bool> showDeleteProductPermanentlyConfirmationDialog(
   BuildContext context,
   String productName,
 ) {
   return showConfirmDialog(
     context,
-    title: 'Delete Product',
-    content: 'Are you sure you want to delete "$productName"?',
-    confirmText: 'Delete',
+    title: 'Delete Product Permanently',
+    content:
+        'This will permanently delete "$productName". This cannot be undone.',
+    confirmText: 'Delete Permanently',
     isDestructive: true,
   );
 }
@@ -63,7 +64,7 @@ Future<bool> showArchiveProductConfirmationDialog(
   return showConfirmDialog(
     context,
     title: 'Archive Product',
-    content: 'Move "$productName" to product history?',
+    content: 'Archive "$productName"?',
     confirmText: 'Archive',
   );
 }

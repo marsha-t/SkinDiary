@@ -88,31 +88,25 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
     await StorageProduct.saveProduct(newProduct);
     if (!mounted) return;
-    Navigator.pop(
-      context,
-      ProductNavigationResult.saved(newProduct),
-    );
+    Navigator.pop(context, ProductNavigationResult.saved(newProduct));
   }
 
-  Future<void> _deleteProduct() async {
+  Future<void> _archiveProduct() async {
     final product = widget.product;
     if (product == null) {
-      Navigator.pop(context); // Nothing to delete
+      Navigator.pop(context); // Nothing to archive
       return;
     }
 
-    final confirm = await showDeleteProductConfirmationDialog(
+    final confirm = await showArchiveProductConfirmationDialog(
       context,
       product.name,
     );
 
     if (confirm) {
-      await StorageProduct.deleteProduct(product.id);
+      await StorageProduct.archiveProduct(product.id);
       if (!mounted) return;
-      Navigator.pop(
-        context,
-        ProductNavigationResult.deleted(product),
-      );
+      Navigator.pop(context, ProductNavigationResult.archived(product));
     }
   }
 
@@ -150,12 +144,12 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                 Padding(
                   padding: const EdgeInsets.only(top: 12.0),
                   child: ElevatedButton(
-                    onPressed: _deleteProduct,
+                    onPressed: _archiveProduct,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
                       foregroundColor: Colors.white,
                     ),
-                    child: const Text('Delete Product'),
+                    child: const Text('Archive Product'),
                   ),
                 ),
             ],
@@ -182,8 +176,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   );
 
   Widget _buildProductTypeField() {
-    final selectedDropdownValue =
-        _isCustomProductType ? 'Other' : _productType;
+    final selectedDropdownValue = _isCustomProductType ? 'Other' : _productType;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -191,12 +184,10 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         DropdownButtonFormField<String>(
           initialValue: selectedDropdownValue,
           decoration: const InputDecoration(labelText: 'Product Type'),
-          items: _defaultProductTypes.map((type) {
-            return DropdownMenuItem(
-              value: type,
-              child: Text(type),
-            );
-          }).toList(),
+          items:
+              _defaultProductTypes.map((type) {
+                return DropdownMenuItem(value: type, child: Text(type));
+              }).toList(),
           onChanged: (value) {
             setState(() {
               if (value == 'Other') {
@@ -218,7 +209,9 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           TextFormField(
             initialValue:
                 widget.product?.productType != null &&
-                        !_defaultProductTypes.contains(widget.product!.productType)
+                        !_defaultProductTypes.contains(
+                          widget.product!.productType,
+                        )
                     ? widget.product!.productType
                     : '',
             decoration: const InputDecoration(labelText: 'Custom Product Type'),

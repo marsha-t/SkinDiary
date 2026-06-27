@@ -151,12 +151,7 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
       if (!mounted) return;
 
       setState(() {
-        _photos.add(
-          EntryPhoto(
-            path: savedPath,
-            label: _selectedLabel,
-          ),
-        );
+        _photos.add(EntryPhoto(path: savedPath, label: _selectedLabel));
       });
     }
   }
@@ -172,7 +167,7 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
       ),
     );
 
-    if (!mounted || result == null) return ;
+    if (!mounted || result == null) return;
     setState(() {
       _selectedProducts = result;
     });

@@ -42,9 +42,43 @@ class StorageProduct {
     }
   }
 
-  static Future<void> deleteProduct(String id) async {
+  static Future<List<Product>> getActiveProducts() async {
+    final all = await getAllProducts();
+    return all.where((p) => p.status == ProductStatus.active).toList();
+  }
+
+  static Future<List<Product>> getArchivedProducts() async {
+    final all = await getAllProducts();
+    return all.where((p) => p.status == ProductStatus.archived).toList();
+  }
+
+  static Future<void> deleteProductPermanently(String id) async {
     final all = await getAllProducts();
     all.removeWhere((p) => p.id == id);
+    final productMap = all.map((p) => p.toMap()).toList();
+    await DatabaseService.setPreference(_key, jsonEncode(productMap));
+  }
+
+  static Future<void> archiveProduct(String id) async {
+    final all = await getAllProducts();
+    final index = all.indexWhere((p) => p.id == id);
+
+    if (index == -1) return;
+
+    all[index] = all[index].copyWith(status: ProductStatus.archived);
+
+    final productMap = all.map((p) => p.toMap()).toList();
+    await DatabaseService.setPreference(_key, jsonEncode(productMap));
+  }
+
+  static Future<void> restoreProduct(String id) async {
+    final all = await getAllProducts();
+    final index = all.indexWhere((p) => p.id == id);
+
+    if (index == -1) return;
+
+    all[index] = all[index].copyWith(status: ProductStatus.active);
+
     final productMap = all.map((p) => p.toMap()).toList();
     await DatabaseService.setPreference(_key, jsonEncode(productMap));
   }

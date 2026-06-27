@@ -2,16 +2,10 @@ class EntryPhoto {
   final String path;
   final String label;
 
-  const EntryPhoto({
-    required this.path,
-    required this.label,
-  });
+  const EntryPhoto({required this.path, required this.label});
 
   Map<String, dynamic> toMap() {
-    return {
-      'path': path,
-      'label': label,
-    };
+    return {'path': path, 'label': label};
   }
 
   factory EntryPhoto.fromMap(Map<String, dynamic> map) {
@@ -21,13 +15,7 @@ class EntryPhoto {
     );
   }
 
-  EntryPhoto copyWith({
-    String? path,
-    String? label,
-  }) {
-    return EntryPhoto(
-      path: path ?? this.path,
-      label: label ?? this.label,
-    );
+  EntryPhoto copyWith({String? path, String? label}) {
+    return EntryPhoto(path: path ?? this.path, label: label ?? this.label);
   }
 }

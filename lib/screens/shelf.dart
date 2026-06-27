@@ -5,6 +5,7 @@ import 'package:skin_diary/services/storage_product.dart';
 import 'package:skin_diary/utils/snackbar.dart';
 import 'package:skin_diary/utils/dialogs.dart';
 import 'package:skin_diary/navigation/product_navigation_result.dart';
+import 'package:skin_diary/app/app_routes.dart';
 
 class ShelfScreen extends StatefulWidget {
   const ShelfScreen({super.key});
@@ -26,7 +27,7 @@ class _ShelfScreenState extends State<ShelfScreen> {
 
   // Data loading
   Future<void> _loadProducts() async {
-    final products = await StorageProduct.getAllProducts();
+    final products = await StorageProduct.getActiveProducts();
 
     if (!mounted) return;
 
@@ -63,31 +64,34 @@ class _ShelfScreenState extends State<ShelfScreen> {
       case ProductNavigationAction.saved:
         break;
 
-      case ProductNavigationAction.deleted:
-        _showUndoDeleteProductSnackBar(result.product);
+      case ProductNavigationAction.archived:
+        _showUndoArchiveProductSnackBar(result.product);
+        break;
+
+      case ProductNavigationAction.deletedPermanently:
         break;
     }
   }
 
   // Product actions
-  Future<void> _deleteProduct(String id) async {
-    final deletedProduct = _products.firstWhere((p) => p.id == id);
+  Future<void> _archiveProduct(String id) async {
+    final archivedProduct = _products.firstWhere((p) => p.id == id);
 
-    await StorageProduct.deleteProduct(id);
+    await StorageProduct.archiveProduct(id);
 
     if (!mounted) return;
 
     await _loadProducts();
 
-    _showUndoDeleteProductSnackBar(deletedProduct);
+    _showUndoArchiveProductSnackBar(archivedProduct);
   }
 
-  void _showUndoDeleteProductSnackBar(Product product) {
+  void _showUndoArchiveProductSnackBar(Product product) {
     ScaffoldMessenger.of(context).showSnackBar(
       buildUndoSnackBar(
-        message: 'Deleted "${product.name}"',
+        message: 'Archived "${product.name}"',
         onUndo: () async {
-          await StorageProduct.saveProduct(product);
+          await StorageProduct.restoreProduct(product.id);
           if (mounted) await _loadProducts();
         },
       ),
@@ -120,7 +124,19 @@ class _ShelfScreenState extends State<ShelfScreen> {
     final categoryOrder = categorizedProducts.keys.toList()..sort();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('My Shelf')),
+      appBar: AppBar(
+        title: const Text('My Shelf'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.archive),
+            tooltip: 'View archived products',
+            onPressed: () async {
+              await Navigator.pushNamed(context, AppRoutes.archivedProducts);
+              if (mounted) await _loadProducts();
+            },
+          ),
+        ],
+      ),
       body:
           _products.isEmpty
               ? const Center(child: Text('No products added yet.'))
@@ -149,11 +165,11 @@ class _ShelfScreenState extends State<ShelfScreen> {
                           direction: DismissDirection.endToStart,
                           background: _buildDismissibleBackground(),
                           confirmDismiss:
-                              (_) => showDeleteProductConfirmationDialog(
+                              (_) => showArchiveProductConfirmationDialog(
                                 context,
                                 product.name,
                               ),
-                          onDismissed: (_) => _deleteProduct(product.id),
+                          onDismissed: (_) => _archiveProduct(product.id),
                           child: ListTile(
                             title: Text(product.name),
                             subtitle: Text(product.brand ?? ''),
@@ -175,9 +191,9 @@ class _ShelfScreenState extends State<ShelfScreen> {
 
   // UI builders
   Widget _buildDismissibleBackground() => Container(
-    color: Colors.red,
+    color: Colors.orange,
     alignment: Alignment.centerRight,
     padding: const EdgeInsets.symmetric(horizontal: 20),
-    child: const Icon(Icons.delete, color: Colors.white),
+    child: const Icon(Icons.archive, color: Colors.white),
   );
 }

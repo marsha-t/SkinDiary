@@ -3,6 +3,7 @@ import 'package:skin_diary/screens/home.dart';
 import 'package:skin_diary/screens/add_edit_entry.dart';
 import 'package:skin_diary/screens/timeline.dart';
 import 'package:skin_diary/screens/shelf.dart';
+import 'package:skin_diary/screens/archived_products.dart';
 
 // Set up route names
 class AppRoutes {
@@ -10,11 +11,13 @@ class AppRoutes {
   static const addEntry = '/add_entry';
   static const timeline = '/timeline';
   static const productShelf = '/product_shelf';
+  static const archivedProducts = '/archived_products';
 
   static Map<String, WidgetBuilder> routes = {
     home: (context) => const HomeScreen(),
     addEntry: (context) => const AddEditEntryScreen(),
     timeline: (context) => const TimelineScreen(),
     productShelf: (context) => const ShelfScreen(),
+    archivedProducts: (context) => const ArchivedProductsScreen(),
   };
 }

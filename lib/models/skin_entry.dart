@@ -36,19 +36,22 @@ class SkinEntry {
     return SkinEntry(
       id: map['id'],
       date: DateTime.parse(map['date']),
-      photos: map['photos'] != null
-        ? List<EntryPhoto>.from(
-            map['photos'].map(
-              (photo) => EntryPhoto.fromMap(Map<String, dynamic>.from(photo)),
-            ),
-          )
-        : [],
+      photos:
+          map['photos'] != null
+              ? List<EntryPhoto>.from(
+                map['photos'].map(
+                  (photo) =>
+                      EntryPhoto.fromMap(Map<String, dynamic>.from(photo)),
+                ),
+              )
+              : [],
       rating: map['rating'],
-      tags: (map['tags'] as String? ?? '')
-        .split(',')
-        .map((tag) => tag.trim())
-        .where((tag) => tag.isNotEmpty)
-        .toList(),
+      tags:
+          (map['tags'] as String? ?? '')
+              .split(',')
+              .map((tag) => tag.trim())
+              .where((tag) => tag.isNotEmpty)
+              .toList(),
       notes: map['notes'],
       productsUsed:
           map['productsUsed'] != null
