@@ -12,6 +12,7 @@ import 'package:skin_diary/widgets/photo_label_dropdown.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:skin_diary/navigation/entry_navigation_result.dart';
+import 'package:skin_diary/models/entry_photo.dart';
 
 class AddEditEntryScreen extends StatefulWidget {
   final SkinEntry? existingEntry;
@@ -29,7 +30,7 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
   late int _rating;
   late List<String> _tags;
   late String _notes;
-  List<Map<String, String>> _labeledPhotos = [];
+  List<EntryPhoto> _photos = [];
   String _selectedLabel = 'Full Face';
   List<Product> _selectedProducts = [];
 
@@ -42,7 +43,7 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
     _rating = entry?.rating ?? 3;
     _tags = entry?.tags ?? [];
     _notes = entry?.notes ?? '';
-    _labeledPhotos = List<Map<String, String>>.from(entry?.photos ?? []);
+    _photos = List<EntryPhoto>.from(entry?.photos ?? []);
     _selectedProducts = List<Product>.from(entry?.productsUsed ?? []);
   }
 
@@ -66,7 +67,7 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
     final entry = SkinEntry(
       id: id,
       date: _date,
-      photos: _labeledPhotos,
+      photos: _photos,
       rating: _rating,
       tags: _tags,
       notes: _notes,
@@ -150,7 +151,12 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
       if (!mounted) return;
 
       setState(() {
-        _labeledPhotos.add({'path': savedPath, 'label': _selectedLabel});
+        _photos.add(
+          EntryPhoto(
+            path: savedPath,
+            label: _selectedLabel,
+          ),
+        );
       });
     }
   }
@@ -166,11 +172,10 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
       ),
     );
 
-    if (result != null) {
-      setState(() {
-        _selectedProducts = result;
-      });
-    }
+    if (!mounted || result == null) return ;
+    setState(() {
+      _selectedProducts = result;
+    });
   }
 
   // Build
@@ -291,10 +296,10 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
         Wrap(
           spacing: 8,
           children:
-              _labeledPhotos.asMap().entries.map((entry) {
+              _photos.asMap().entries.map((entry) {
                 final index = entry.key;
                 final photo = entry.value;
-                final file = File(photo['path']!);
+                final file = File(photo.path);
 
                 return Column(
                   mainAxisSize: MainAxisSize.min,
@@ -313,13 +318,13 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
                           alignment: Alignment.center,
                           child: const Icon(Icons.broken_image, size: 40),
                         ),
-                    Text(photo['label'] ?? ''),
+                    Text(photo.label),
                     IconButton(
                       tooltip: 'Remove photo from entry',
                       icon: const Icon(Icons.delete, color: Colors.red),
                       onPressed: () {
                         setState(() {
-                          _labeledPhotos.removeAt(index);
+                          _photos.removeAt(index);
                         });
                       },
                     ),

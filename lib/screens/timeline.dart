@@ -121,7 +121,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
                     ).format(entry.date);
                     final photoPath =
                         entry.photos.isNotEmpty
-                            ? entry.photos.first['path']
+                            ? entry.photos.first.path
                             : null;
                     final photoFile =
                         photoPath != null ? File(photoPath) : null;

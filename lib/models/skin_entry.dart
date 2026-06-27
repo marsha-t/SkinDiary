@@ -1,9 +1,10 @@
 import 'package:skin_diary/models/product.dart';
+import 'package:skin_diary/models/entry_photo.dart';
 
 class SkinEntry {
   final String id;
   final DateTime date;
-  final List<Map<String, String>> photos;
+  final List<EntryPhoto> photos;
   final int rating;
   final List<String> tags;
   final String notes;
@@ -23,8 +24,7 @@ class SkinEntry {
     return {
       'id': id,
       'date': date.toIso8601String(),
-      'photos':
-          photos.map((p) => {'path': p['path'], 'label': p['label']}).toList(),
+      'photos': photos.map((photo) => photo.toMap()).toList(),
       'rating': rating,
       'tags': tags.join(','),
       'notes': notes,
@@ -33,24 +33,22 @@ class SkinEntry {
   }
 
   factory SkinEntry.fromMap(Map<String, dynamic> map) {
-    final rawPhotos =
-        (map['photos'] is List) ? List<dynamic>.from(map['photos']) : [];
-    final parsedPhotos =
-        rawPhotos
-            .map(
-              (p) => {
-                'path': p['path'] as String,
-                'label': p['label'] as String,
-              },
-            )
-            .toList();
-
     return SkinEntry(
       id: map['id'],
       date: DateTime.parse(map['date']),
-      photos: parsedPhotos,
+      photos: map['photos'] != null
+        ? List<EntryPhoto>.from(
+            map['photos'].map(
+              (photo) => EntryPhoto.fromMap(Map<String, dynamic>.from(photo)),
+            ),
+          )
+        : [],
       rating: map['rating'],
-      tags: (map['tags'] as String).split(','),
+      tags: (map['tags'] as String? ?? '')
+        .split(',')
+        .map((tag) => tag.trim())
+        .where((tag) => tag.isNotEmpty)
+        .toList(),
       notes: map['notes'],
       productsUsed:
           map['productsUsed'] != null
@@ -64,7 +62,7 @@ class SkinEntry {
   SkinEntry copyWith({
     String? id,
     DateTime? date,
-    List<Map<String, String>>? photos,
+    List<EntryPhoto>? photos,
     int? rating,
     List<String>? tags,
     String? notes,

@@ -26,6 +26,24 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   DateTime? _expirationDate;
   List<String>? _keyIngredients = [];
   String? _productType;
+  static const List<String> _defaultProductTypes = [
+    'Cleanser',
+    'Makeup Remover',
+    'Exfoliant',
+    'Toner',
+    'Essence',
+    'Serum',
+    'Spot Treatment',
+    'Eye Cream',
+    'Moisturiser',
+    'Mask',
+    'Sunscreen',
+    'Lip Care',
+    'Prescription',
+    'Makeup',
+    'Other',
+  ];
+  bool _isCustomProductType = false;
 
   // Lifecycle
   @override
@@ -38,7 +56,14 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     _expirationDate = widget.product?.expirationDate;
     _keyIngredients = widget.product?.keyIngredients ?? [];
     _categories = widget.product?.categories ?? [];
-    _productType = widget.product?.productType ?? '';
+    final existingProductType = widget.product?.productType;
+
+    _productType = existingProductType;
+
+    _isCustomProductType =
+        existingProductType != null &&
+        existingProductType.isNotEmpty &&
+        !_defaultProductTypes.contains(existingProductType);
   }
 
   // Product actions
@@ -156,16 +181,56 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     onSaved: (value) => _brand = value?.trim() ?? '',
   );
 
-  Widget _buildProductTypeField() => TextFormField(
-    initialValue: _productType,
-    decoration: const InputDecoration(
-      labelText: 'Product Type (e.g. Serum, Cleanser)',
-    ),
-    onSaved: (value) {
-      final trimmed = value?.trim();
-      _productType = (trimmed == null || trimmed.isEmpty) ? null : trimmed;
-    },
-  );
+  Widget _buildProductTypeField() {
+    final selectedDropdownValue =
+        _isCustomProductType ? 'Other' : _productType;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        DropdownButtonFormField<String>(
+          initialValue: selectedDropdownValue,
+          decoration: const InputDecoration(labelText: 'Product Type'),
+          items: _defaultProductTypes.map((type) {
+            return DropdownMenuItem(
+              value: type,
+              child: Text(type),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              if (value == 'Other') {
+                _isCustomProductType = true;
+                _productType = null;
+              } else {
+                _isCustomProductType = false;
+                _productType = value;
+              }
+            });
+          },
+          onSaved: (value) {
+            if (!_isCustomProductType) {
+              _productType = value;
+            }
+          },
+        ),
+        if (_isCustomProductType)
+          TextFormField(
+            initialValue:
+                widget.product?.productType != null &&
+                        !_defaultProductTypes.contains(widget.product!.productType)
+                    ? widget.product!.productType
+                    : '',
+            decoration: const InputDecoration(labelText: 'Custom Product Type'),
+            onSaved: (value) {
+              final trimmed = value?.trim();
+              _productType =
+                  trimmed == null || trimmed.isEmpty ? null : trimmed;
+            },
+          ),
+      ],
+    );
+  }
 
   Widget _buildCategoriesField() => TextFormField(
     initialValue: _categories.join(', '),

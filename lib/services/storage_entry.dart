@@ -52,10 +52,8 @@ class StorageEntry {
 
   static Future<void> deleteEntryPhotoFiles(SkinEntry entry) async {
     for (final photo in entry.photos) {
-      final path = photo['path'];
-      if (path == null) continue;
-
-      final file = File(path);
+      final file = File(photo.path);
+      
       if (await file.exists()) {
         await file.delete();
       }

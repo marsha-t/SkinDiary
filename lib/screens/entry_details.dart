@@ -156,8 +156,8 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> {
           runSpacing: 8,
           children:
               _entry.photos.map((photo) {
-                final file = File(photo['path']!);
-                final label = photo['label'] ?? '';
+                final file = File(photo.path);
+                final label = photo.label;
 
                 return Column(
                   mainAxisSize: MainAxisSize.min,
