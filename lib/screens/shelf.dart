@@ -13,12 +13,11 @@ class ShelfScreen extends StatefulWidget {
 }
 
 class _ShelfScreenState extends State<ShelfScreen> {
-
   // State
   List<Product> _products = [];
 
   // Lifecycle
-  @override 
+  @override
   void initState() {
     super.initState();
     _loadProducts();
@@ -48,15 +47,13 @@ class _ShelfScreenState extends State<ShelfScreen> {
 
     if (result != null) {
       _showUndoDeleteProductSnackBar(result);
-    }  
+    }
   }
 
   Future<void> _navigateToEditProduct(Product product) async {
     final result = await Navigator.push<Product>(
       context,
-      MaterialPageRoute(
-        builder: (_) => AddEditProductScreen(product: product),
-      ),
+      MaterialPageRoute(builder: (_) => AddEditProductScreen(product: product)),
     );
 
     if (!mounted) return;
@@ -98,9 +95,8 @@ class _ShelfScreenState extends State<ShelfScreen> {
     final Map<String, List<Product>> grouped = {};
 
     for (final product in products) {
-      final categories = product.categories.isEmpty 
-          ? ['Uncategorized']
-          : product.categories;
+      final categories =
+          product.categories.isEmpty ? ['Uncategorized'] : product.categories;
 
       for (final category in categories) {
         if (!grouped.containsKey(category)) {
@@ -121,45 +117,50 @@ class _ShelfScreenState extends State<ShelfScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('My Shelf')),
-      body: _products.isEmpty
-      ? const Center(child: Text('No products added yet.'))
-      : ListView.builder(
-        itemCount: categoryOrder.length,
-        itemBuilder: (context, index) {
-          final category = categoryOrder[index];
-          final products = categorizedProducts[category]!;
+      body:
+          _products.isEmpty
+              ? const Center(child: Text('No products added yet.'))
+              : ListView.builder(
+                itemCount: categoryOrder.length,
+                itemBuilder: (context, index) {
+                  final category = categoryOrder[index];
+                  final products = categorizedProducts[category]!;
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: Text(
-                  category,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Text(
+                          category,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      ...products.map((product) {
+                        return Dismissible(
+                          key: ValueKey('${category}_${product.id}'),
+                          direction: DismissDirection.endToStart,
+                          background: _buildDismissibleBackground(),
+                          confirmDismiss:
+                              (_) => showDeleteProductConfirmationDialog(
+                                context,
+                                product.name,
+                              ),
+                          onDismissed: (_) => _deleteProduct(product.id),
+                          child: ListTile(
+                            title: Text(product.name),
+                            subtitle: Text(product.brand ?? ''),
+                            onTap: () => _navigateToEditProduct(product),
+                          ),
+                        );
+                      }),
+                    ],
+                  );
+                },
               ),
-              ...products.map((product) {
-                return Dismissible(
-                  key: ValueKey('${category}_${product.id}'),
-                  direction: DismissDirection.endToStart,
-                  background: _buildDismissibleBackground(),
-                  confirmDismiss: (_) => showDeleteProductConfirmationDialog(context, product.name),
-                  onDismissed: (_) => _deleteProduct(product.id),
-                  child: ListTile(
-                    title: Text(product.name),
-                    subtitle: Text(product.brand ?? ''),
-                    onTap: () => _navigateToEditProduct(product),
-                  ),
-                );
-              }),
-            ],
-          );
-        },
-      ),
 
       floatingActionButton: FloatingActionButton(
         onPressed: _navigateToAddProduct,
@@ -167,7 +168,7 @@ class _ShelfScreenState extends State<ShelfScreen> {
       ),
     );
   }
-  
+
   // UI builders
   Widget _buildDismissibleBackground() => Container(
     color: Colors.red,

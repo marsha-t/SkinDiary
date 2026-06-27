@@ -42,10 +42,10 @@ class _HomeScreenState extends State<HomeScreen> {
       });
     }
   }
-  
+
   Future<void> _navigateToAdd() async {
     final result = await Navigator.push<EntryNavigationResult>(
-      context, 
+      context,
       MaterialPageRoute(builder: (context) => const AddEditEntryScreen()),
     );
 
@@ -58,17 +58,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _navigateToDetails(SkinEntry entry) async {
     final result = await Navigator.push<EntryNavigationResult>(
-      context, 
+      context,
       MaterialPageRoute(builder: (context) => EntryDetailsScreen(entry: entry)),
     );
 
     if (!mounted) return;
-    
+
     // Reload regardless of result. EntryDetailsScreen may update an entry, stay open, then return null when the user backs out
     await _loadEntries();
-    
+
     if (result != null && result.action == EntryNavigationAction.deleted) {
-        _showUndoDeleteEntrySnackBar(result.entry);
+      _showUndoDeleteEntrySnackBar(result.entry);
     }
   }
 
@@ -83,20 +83,15 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-  Future<void>  _navigateToTimeline() async {
-    await Navigator.pushNamed(
-      context, 
-      AppRoutes.timeline,
-    );
+
+  Future<void> _navigateToTimeline() async {
+    await Navigator.pushNamed(context, AppRoutes.timeline);
     if (!mounted) return;
     await _loadEntries();
   }
 
   Future<void> _navigateToShelf() async {
-    await Navigator.pushNamed(
-      context, 
-      AppRoutes.productShelf
-    );
+    await Navigator.pushNamed(context, AppRoutes.productShelf);
     // No mounted check needed: nothing uses context or updates state after await
     // No reload needed: product shelf changes do not affect today's entry list
   }
@@ -105,11 +100,11 @@ class _HomeScreenState extends State<HomeScreen> {
     final deletedEntry = _todayEntries.firstWhere((e) => e.id == id);
 
     await StorageEntry.deleteEntryRecord(id);
-    
+
     if (!mounted) return;
-    
+
     await _loadEntries();
-    
+
     _showUndoDeleteEntrySnackBar(deletedEntry);
   }
 
@@ -124,7 +119,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
       // 3. Generate timestamp
       final now = DateTime.now();
-      final formatted = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}_${now.hour.toString().padLeft(2, '0')}-${now.minute.toString().padLeft(2, '0')}';
+      final formatted =
+          '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}_${now.hour.toString().padLeft(2, '0')}-${now.minute.toString().padLeft(2, '0')}';
 
       // 4. Get file path
       final directory = await getApplicationDocumentsDirectory();
@@ -135,10 +131,9 @@ class _HomeScreenState extends State<HomeScreen> {
       await file.writeAsString(jsonString);
 
       // 6. Share it
-      await Share.shareXFiles(
-        [XFile(filePath)],
-        text: 'Here is your Skin Diary data backup.',
-      );
+      await Share.shareXFiles([
+        XFile(filePath),
+      ], text: 'Here is your Skin Diary data backup.');
     } catch (e) {
       debugPrint('Export failed: $e');
     }
@@ -152,7 +147,7 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: hasEntries ? _buildEntryList() : _buildEmptyState()
+          child: hasEntries ? _buildEntryList() : _buildEmptyState(),
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -161,11 +156,14 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-  
+
   Widget _buildEntryList() => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      const Text("Today's Entries", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+      const Text(
+        "Today's Entries",
+        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+      ),
       const SizedBox(height: 10),
       Expanded(child: _buildEntryListView()),
       _buildActionButtons(),
@@ -181,11 +179,14 @@ class _HomeScreenState extends State<HomeScreen> {
         key: ValueKey(entry.id),
         direction: DismissDirection.endToStart,
         background: _buildDismissibleBackground(),
-        confirmDismiss: (direction) => showDeleteEntryConfirmationDialog(context),
+        confirmDismiss:
+            (direction) => showDeleteEntryConfirmationDialog(context),
         onDismissed: (_) => _deleteEntry(entry.id),
         child: ListTile(
           title: Text('Time: $formatted'),
-          subtitle: Text('Rating: ${entry.rating} | Tags: ${entry.tags.join(', ')}'),
+          subtitle: Text(
+            'Rating: ${entry.rating} | Tags: ${entry.tags.join(', ')}',
+          ),
           onTap: () => _navigateToDetails(entry),
         ),
       );
@@ -230,6 +231,4 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     ),
   );
-
-  
 }

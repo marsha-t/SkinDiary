@@ -44,9 +44,16 @@ class Product {
       name: map['name'],
       categories: List<String>.from(map['categories']),
       dateAdded: DateTime.parse(map['dateAdded']),
-      dateOpened: map['dateOpened'] != null ? DateTime.parse(map['dateOpened']) : null,
-      expirationDate: map['expirationDate'] != null ? DateTime.parse(map['expirationDate']) : null,
-      keyIngredients: map['keyIngredients'] != null ? List<String>.from(map['keyIngredients']) : null,
+      dateOpened:
+          map['dateOpened'] != null ? DateTime.parse(map['dateOpened']) : null,
+      expirationDate:
+          map['expirationDate'] != null
+              ? DateTime.parse(map['expirationDate'])
+              : null,
+      keyIngredients:
+          map['keyIngredients'] != null
+              ? List<String>.from(map['keyIngredients'])
+              : null,
       brand: map['brand'],
       productType: map['productType'],
       notes: map['notes'],

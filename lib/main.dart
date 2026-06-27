@@ -10,17 +10,16 @@ void main() {
 ///   - theme
 ///   - routes
 ///   - remove debug banner
-class SkinDiary extends StatelessWidget
-{
+class SkinDiary extends StatelessWidget {
   const SkinDiary({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: "SkinDiary", 
+      title: "SkinDiary",
       theme: ThemeData(
         useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFFF9C5D1))
+        colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFFF9C5D1)),
       ),
       routes: AppRoutes.routes,
       debugShowCheckedModeBanner: false,

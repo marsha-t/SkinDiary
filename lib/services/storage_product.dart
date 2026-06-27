@@ -4,18 +4,17 @@ import 'package:skin_diary/models/product.dart';
 
 class StorageProduct {
   static const _key = 'products';
-  
+
   static Future<void> saveProduct(Product product) async {
     final all = await getAllProducts();
     final existingIndex = all.indexWhere((p) => p.id == product.id);
 
     if (existingIndex != -1) {
       all[existingIndex] = product;
-    } 
-    else {
+    } else {
       all.add(product);
     }
-    
+
     final encoded = jsonEncode(all.map((p) => p.toMap()).toList());
     await DatabaseService.setPreference(_key, encoded);
   }
@@ -29,10 +28,11 @@ class StorageProduct {
 
       if (decoded is! List) return [];
 
-      final products = decoded
-          .whereType<Map>()
-          .map((p) => Product.fromMap(Map<String, dynamic>.from(p)))
-          .toList();
+      final products =
+          decoded
+              .whereType<Map>()
+              .map((p) => Product.fromMap(Map<String, dynamic>.from(p)))
+              .toList();
 
       products.sort((a, b) => a.name.compareTo(b.name));
 

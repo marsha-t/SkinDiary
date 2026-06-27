@@ -28,11 +28,10 @@ class DatabaseService {
 
   static Future<void> setPreference(String key, String value) async {
     final db = await getDatabase();
-    await db.insert(
-      'preferences',
-      {'key': key, 'value': value},
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('preferences', {
+      'key': key,
+      'value': value,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   static Future<String?> getPreference(String key) async {
@@ -50,18 +49,14 @@ class DatabaseService {
 
   static Future<void> removePreference(String key) async {
     final db = await getDatabase();
-    await db.delete(
-      'preferences',
-      where: 'key = ?',
-      whereArgs: [key],
-    );
+    await db.delete('preferences', where: 'key = ?', whereArgs: [key]);
   }
+
   static Future<Map<String, String>> getAllPreferences() async {
     final db = await getDatabase();
     final result = await db.query('preferences');
     return {
-      for (var row in result)
-        row['key'] as String: row['value'] as String
+      for (var row in result) row['key'] as String: row['value'] as String,
     };
   }
 }

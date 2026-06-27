@@ -17,7 +17,6 @@ class TimelineScreen extends StatefulWidget {
 }
 
 class _TimelineScreenState extends State<TimelineScreen> {
-  
   // State
   List<SkinEntry> _allEntries = [];
 
@@ -31,16 +30,16 @@ class _TimelineScreenState extends State<TimelineScreen> {
   // Data loading
   Future<void> _loadEntries() async {
     final loadedEntries = await StorageEntry.getAllEntries();
-    
+
     if (!mounted) return;
 
     setState(() => _allEntries = loadedEntries);
   }
-  
+
   // Navigation
   Future<void> _navigateToDetails(SkinEntry entry) async {
     final result = await Navigator.push<EntryNavigationResult>(
-      context, 
+      context,
       MaterialPageRoute(builder: (context) => EntryDetailsScreen(entry: entry)),
     );
 
@@ -70,14 +69,13 @@ class _TimelineScreenState extends State<TimelineScreen> {
     final deletedEntry = _allEntries.firstWhere((entry) => entry.id == id);
 
     await StorageEntry.deleteEntryRecord(id);
-    
+
     if (!mounted) return;
-    
+
     await _loadEntries();
 
     _showUndoDeleteEntrySnackBar(deletedEntry);
   }
-
 
   void _showUndoDeleteEntrySnackBar(SkinEntry entry) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -97,55 +95,71 @@ class _TimelineScreenState extends State<TimelineScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Timeline')),
       body: SafeArea(
-        child: _allEntries.isEmpty
-        ? const Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.history, size: 48, color: Colors.grey),
-              SizedBox(height: 10),
-              Text('No entries yet', style: TextStyle(fontSize: 16)),
-              Text('Start by adding a new skin log!'),
-            ],
-          ),
-        )
-        : ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            itemCount: _allEntries.length,
-            itemBuilder: (context, index) {
-              final entry = _allEntries[index];
-              final formatted = DateFormat('MMM d, y - h:mm a').format(entry.date);
-              final photoPath = entry.photos.isNotEmpty ? entry.photos.first['path'] : null;
-              final photoFile = photoPath != null ? File(photoPath) : null;
-              final hasPhotoFile = photoFile != null && photoFile.existsSync();
+        child:
+            _allEntries.isEmpty
+                ? const Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.history, size: 48, color: Colors.grey),
+                      SizedBox(height: 10),
+                      Text('No entries yet', style: TextStyle(fontSize: 16)),
+                      Text('Start by adding a new skin log!'),
+                    ],
+                  ),
+                )
+                : ListView.builder(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  itemCount: _allEntries.length,
+                  itemBuilder: (context, index) {
+                    final entry = _allEntries[index];
+                    final formatted = DateFormat(
+                      'MMM d, y - h:mm a',
+                    ).format(entry.date);
+                    final photoPath =
+                        entry.photos.isNotEmpty
+                            ? entry.photos.first['path']
+                            : null;
+                    final photoFile =
+                        photoPath != null ? File(photoPath) : null;
+                    final hasPhotoFile =
+                        photoFile != null && photoFile.existsSync();
 
-              return Dismissible(
-                key: ValueKey(entry.id),
-                direction: DismissDirection.endToStart,
-                background: Container(
-                  color: Colors.red,
-                  alignment: Alignment.centerRight,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: const Icon(Icons.delete, color: Colors.white),
+                    return Dismissible(
+                      key: ValueKey(entry.id),
+                      direction: DismissDirection.endToStart,
+                      background: Container(
+                        color: Colors.red,
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: const Icon(Icons.delete, color: Colors.white),
+                      ),
+                      confirmDismiss:
+                          (direction) =>
+                              showDeleteEntryConfirmationDialog(context),
+                      onDismissed: (_) => _deleteEntry(entry.id),
+                      child: ListTile(
+                        leading:
+                            hasPhotoFile
+                                ? Image.file(
+                                  photoFile,
+                                  width: 50,
+                                  height: 50,
+                                  fit: BoxFit.cover,
+                                )
+                                : const Icon(Icons.image_not_supported),
+                        title: Text(formatted),
+                        subtitle: Text(
+                          'Rating: ${entry.rating} | Tags: ${entry.tags.join(', ')}',
+                        ),
+                        onTap: () => _navigateToDetails(entry),
+                      ),
+                    );
+                  },
                 ),
-                confirmDismiss: (direction) => showDeleteEntryConfirmationDialog(context),
-                onDismissed: (_) => _deleteEntry(entry.id),
-                child: ListTile(
-                  leading: hasPhotoFile 
-                    ? Image.file(
-                      photoFile,
-                      width: 50,
-                      height: 50,
-                      fit: BoxFit.cover,
-                    )
-                    : const Icon(Icons.image_not_supported),
-                title: Text(formatted),
-                subtitle: Text('Rating: ${entry.rating} | Tags: ${entry.tags.join(', ')}'),
-                onTap: () => _navigateToDetails(entry)
-              )
-            );
-          },
-        )
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _navigateToAdd,

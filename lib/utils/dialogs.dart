@@ -10,23 +10,25 @@ Future<bool> showConfirmDialog(
 }) async {
   return await showDialog<bool>(
         context: context,
-        builder: (context) => AlertDialog(
-          title: Text(title),
-          content: Text(content),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text(cancelText),
+        builder:
+            (context) => AlertDialog(
+              title: Text(title),
+              content: Text(content),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: Text(cancelText),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  style:
+                      isDestructive
+                          ? TextButton.styleFrom(foregroundColor: Colors.red)
+                          : null,
+                  child: Text(confirmText),
+                ),
+              ],
             ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              style: isDestructive
-                  ? TextButton.styleFrom(foregroundColor: Colors.red)
-                  : null,
-              child: Text(confirmText),
-            ),
-          ],
-        ),
       ) ??
       false;
 }

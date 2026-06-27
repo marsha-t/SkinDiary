@@ -15,7 +15,6 @@ class AddEditProductScreen extends StatefulWidget {
 }
 
 class _AddEditProductScreenState extends State<AddEditProductScreen> {
-
   // State
   final _formKey = GlobalKey<FormState>();
   late String _name;
@@ -40,12 +39,12 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     _categories = widget.product?.categories ?? [];
     _productType = widget.product?.productType ?? '';
   }
-  
+
   // Product actions
   Future<void> _saveProduct() async {
     if (!_formKey.currentState!.validate()) return;
     _formKey.currentState!.save();
-    
+
     final now = DateTime.now();
     const uuid = Uuid();
     final newProduct = Product(
@@ -75,7 +74,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
     final confirm = await showDeleteProductConfirmationDialog(
       context,
-      product.name
+      product.name,
     );
 
     if (confirm) {
@@ -138,8 +137,9 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   Widget _buildNameField() => TextFormField(
     initialValue: _name,
     decoration: const InputDecoration(labelText: 'Product Name'),
-    validator: (value) =>
-      value == null || value.trim().isEmpty ? 'Enter a name' : null,
+    validator:
+        (value) =>
+            value == null || value.trim().isEmpty ? 'Enter a name' : null,
     onSaved: (value) => _name = value?.trim() ?? '',
   );
 
@@ -151,7 +151,9 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
   Widget _buildProductTypeField() => TextFormField(
     initialValue: _productType,
-    decoration: const InputDecoration(labelText: 'Product Type (e.g. Serum, Cleanser)'),
+    decoration: const InputDecoration(
+      labelText: 'Product Type (e.g. Serum, Cleanser)',
+    ),
     onSaved: (value) {
       final trimmed = value?.trim();
       _productType = (trimmed == null || trimmed.isEmpty) ? null : trimmed;
@@ -160,25 +162,12 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
   Widget _buildCategoriesField() => TextFormField(
     initialValue: _categories.join(', '),
-    decoration: const InputDecoration(labelText: 'Categories (comma-separated)'),
+    decoration: const InputDecoration(
+      labelText: 'Categories (comma-separated)',
+    ),
     onSaved: (value) {
-      _categories = (value ?? '')
-        .split(',')
-        .map((e) => e.trim())
-        .where((e) => e.isNotEmpty)
-        .toList();
-    },
-  );
-
-  Widget _buildIngredientsField() => TextFormField(
-    initialValue: _keyIngredients?.join(', '),
-    decoration: const InputDecoration(labelText: 'Key Ingredients (comma-separated)'),
-    onSaved: (value) {
-      final input = value?.trim();
-
-      _keyIngredients = (input == null || input.isEmpty)
-          ? null
-          : input
+      _categories =
+          (value ?? '')
               .split(',')
               .map((e) => e.trim())
               .where((e) => e.isNotEmpty)
@@ -186,12 +175,37 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     },
   );
 
-  Widget _buildDateField(String label, DateTime? value, void Function(DateTime) onPicked) {
+  Widget _buildIngredientsField() => TextFormField(
+    initialValue: _keyIngredients?.join(', '),
+    decoration: const InputDecoration(
+      labelText: 'Key Ingredients (comma-separated)',
+    ),
+    onSaved: (value) {
+      final input = value?.trim();
+
+      _keyIngredients =
+          (input == null || input.isEmpty)
+              ? null
+              : input
+                  .split(',')
+                  .map((e) => e.trim())
+                  .where((e) => e.isNotEmpty)
+                  .toList();
+    },
+  );
+
+  Widget _buildDateField(
+    String label,
+    DateTime? value,
+    void Function(DateTime) onPicked,
+  ) {
     return ListTile(
       contentPadding: EdgeInsets.zero,
-      title: Text(value == null
-          ? 'Select $label'
-          : '$label: ${DateFormat.yMMMd().format(value)}'),
+      title: Text(
+        value == null
+            ? 'Select $label'
+            : '$label: ${DateFormat.yMMMd().format(value)}',
+      ),
       trailing: IconButton(
         icon: const Icon(Icons.calendar_today),
         onPressed: () async {

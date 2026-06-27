@@ -19,7 +19,7 @@ class _PhotoLabelDropdownState extends State<PhotoLabelDropdown> {
     'Chin',
     'Other (Custom)',
   ];
-  
+
   String? _selectedLabel;
 
   @override
@@ -39,12 +39,13 @@ class _PhotoLabelDropdownState extends State<PhotoLabelDropdown> {
         DropdownButton<String>(
           isExpanded: true,
           value: _selectedLabel,
-          items: _predefinedLabels.map((label) {
-            return DropdownMenuItem<String> (
-              value: label, 
-              child: Text(label),
-            );
-          }).toList(), 
+          items:
+              _predefinedLabels.map((label) {
+                return DropdownMenuItem<String>(
+                  value: label,
+                  child: Text(label),
+                );
+              }).toList(),
           onChanged: (value) {
             setState(() {
               _selectedLabel = value;
@@ -54,7 +55,7 @@ class _PhotoLabelDropdownState extends State<PhotoLabelDropdown> {
             });
           },
         ),
-        if (_selectedLabel == 'Other (Custom)')...[
+        if (_selectedLabel == 'Other (Custom)') ...[
           const SizedBox(height: 12),
           const Text('Enter custom label:'),
           TextField(
@@ -66,7 +67,7 @@ class _PhotoLabelDropdownState extends State<PhotoLabelDropdown> {
               border: OutlineInputBorder(),
             ),
           ),
-        ]
+        ],
       ],
     );
   }

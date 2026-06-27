@@ -13,10 +13,9 @@ import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:skin_diary/navigation/entry_navigation_result.dart';
 
-
 class AddEditEntryScreen extends StatefulWidget {
   final SkinEntry? existingEntry;
-  
+
   const AddEditEntryScreen({super.key, this.existingEntry});
 
   @override
@@ -24,7 +23,6 @@ class AddEditEntryScreen extends StatefulWidget {
 }
 
 class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
-  
   // State
   final _formKey = GlobalKey<FormState>();
   late DateTime _date;
@@ -61,7 +59,7 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
   Future<void> _saveEntry() async {
     if (!_formKey.currentState!.validate()) return;
     _formKey.currentState!.save();
-    
+
     const uuid = Uuid();
     final id = widget.existingEntry?.id ?? uuid.v4();
 
@@ -80,7 +78,7 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
       Navigator.pop(context, EntryNavigationResult.saved(entry));
     }
   }
-  
+
   Future<void> _deleteEntry() async {
     final entry = widget.existingEntry;
     if (entry == null) return;
@@ -123,25 +121,26 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
   }
 
   // Photo actions
-  Future<void>  _pickImage() async {
+  Future<void> _pickImage() async {
     final source = await showDialog<ImageSource>(
       context: context,
-      builder: (context) => SimpleDialog(
-        title: const Text('Upload Photo'),
-        children: [
-          SimpleDialogOption(
-            onPressed: () => Navigator.pop(context, ImageSource.camera),
-            child: const Text('Take Photo'),
+      builder:
+          (context) => SimpleDialog(
+            title: const Text('Upload Photo'),
+            children: [
+              SimpleDialogOption(
+                onPressed: () => Navigator.pop(context, ImageSource.camera),
+                child: const Text('Take Photo'),
+              ),
+              SimpleDialogOption(
+                onPressed: () => Navigator.pop(context, ImageSource.gallery),
+                child: const Text('Choose from Gallery'),
+              ),
+            ],
           ),
-          SimpleDialogOption(
-            onPressed: () => Navigator.pop(context, ImageSource.gallery),
-            child: const Text('Choose from Gallery'),
-          )
-        ],
-      )
     );
 
-    if (!mounted) return ;
+    if (!mounted) return;
 
     if (source != null) {
       final pickedFile = await ImagePicker().pickImage(source: source);
@@ -151,10 +150,7 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
       if (!mounted) return;
 
       setState(() {
-        _labeledPhotos.add({
-          'path': savedPath,
-          'label': _selectedLabel,
-        });
+        _labeledPhotos.add({'path': savedPath, 'label': _selectedLabel});
       });
     }
   }
@@ -164,9 +160,9 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
     final result = await Navigator.push<List<Product>>(
       context,
       MaterialPageRoute(
-        builder: (context) => SelectProductScreen(
-          initialSelection: _selectedProducts,
-        ),
+        builder:
+            (context) =>
+                SelectProductScreen(initialSelection: _selectedProducts),
       ),
     );
 
@@ -200,7 +196,10 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
               const SizedBox(height: 10),
               _buildPhotoSection(),
               const SizedBox(height: 10),
-              Text('Products Used:', style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text(
+                'Products Used:',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
               TextButton(
                 onPressed: _selectProducts,
                 child: Text(
@@ -211,7 +210,10 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
               ),
               Wrap(
                 spacing: 8,
-                children: _selectedProducts.map((p) => Chip(label: Text(p.name))).toList(),
+                children:
+                    _selectedProducts
+                        .map((p) => Chip(label: Text(p.name)))
+                        .toList(),
               ),
               const SizedBox(height: 10),
               _buildSaveDeleteButtons(widget.existingEntry != null),
@@ -229,11 +231,12 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
       maxLines: 2,
       decoration: const InputDecoration(labelText: 'Tags (comma separated)'),
       onSaved: (value) {
-        _tags = (value ?? '')
-            .split(',')
-            .map((e) => e.trim())
-            .where((e) => e.isNotEmpty)
-            .toList();
+        _tags =
+            (value ?? '')
+                .split(',')
+                .map((e) => e.trim())
+                .where((e) => e.isNotEmpty)
+                .toList();
       },
     );
   }
@@ -258,10 +261,7 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
                 'Date: ${DateFormat('MMMM d, yyyy - h:mm a').format(_date)}',
               ),
             ),
-            TextButton(
-              onPressed: _selectDateTime,
-              child: const Text('Change'),
-            ),
+            TextButton(onPressed: _selectDateTime, child: const Text('Change')),
           ],
         ),
         const SizedBox(height: 10),
@@ -286,43 +286,46 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
       children: [
         PhotoLabelDropdown(onLabelSelected: (label) => _selectedLabel = label),
         const SizedBox(height: 10),
-        ElevatedButton(
-          onPressed: _pickImage,
-          child: const Text('Add Photo'),
-        ),
+        ElevatedButton(onPressed: _pickImage, child: const Text('Add Photo')),
         const SizedBox(height: 10),
         Wrap(
           spacing: 8,
-          children: _labeledPhotos.asMap().entries.map((entry) {
-            final index = entry.key;
-            final photo = entry.value;
-            final file = File(photo['path']!);
+          children:
+              _labeledPhotos.asMap().entries.map((entry) {
+                final index = entry.key;
+                final photo = entry.value;
+                final file = File(photo['path']!);
 
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                file.existsSync()
-                    ? Image.file(file, width: 100, height: 100, fit: BoxFit.cover)
-                    : Container(
-                        width: 100,
-                        height: 100,
-                        color: Colors.grey[300],
-                        alignment: Alignment.center,
-                        child: const Icon(Icons.broken_image, size: 40),
-                      ),
-                Text(photo['label'] ?? ''),
-                IconButton(
-                  tooltip: 'Remove photo from entry',
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () {
-                    setState(() {
-                      _labeledPhotos.removeAt(index);
-                    });
-                  },
-                ),
-              ],
-            );
-          }).toList(),
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    file.existsSync()
+                        ? Image.file(
+                          file,
+                          width: 100,
+                          height: 100,
+                          fit: BoxFit.cover,
+                        )
+                        : Container(
+                          width: 100,
+                          height: 100,
+                          color: Colors.grey[300],
+                          alignment: Alignment.center,
+                          child: const Icon(Icons.broken_image, size: 40),
+                        ),
+                    Text(photo['label'] ?? ''),
+                    IconButton(
+                      tooltip: 'Remove photo from entry',
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () {
+                        setState(() {
+                          _labeledPhotos.removeAt(index);
+                        });
+                      },
+                    ),
+                  ],
+                );
+              }).toList(),
         ),
       ],
     );
@@ -331,10 +334,7 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
   Widget _buildSaveDeleteButtons(bool showDelete) {
     return Column(
       children: [
-        ElevatedButton(
-          onPressed: _saveEntry,
-          child: const Text('Save Entry'),
-        ),
+        ElevatedButton(onPressed: _saveEntry, child: const Text('Save Entry')),
         const SizedBox(height: 10),
         if (showDelete)
           ElevatedButton(
