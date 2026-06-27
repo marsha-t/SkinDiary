@@ -82,4 +82,63 @@ class StorageProduct {
     final productMap = all.map((p) => p.toMap()).toList();
     await DatabaseService.setPreference(_key, jsonEncode(productMap));
   }
+
+  static String _normaliseText(String? value) {
+    return (value ?? '').trim().toLowerCase();
+  }
+
+  static List<String> _normaliseList(List<String>? values) {
+    final normalised =
+        (values ?? [])
+            .map((value) => value.trim().toLowerCase())
+            .where((value) => value.isNotEmpty)
+            .toList();
+
+    normalised.sort();
+
+    return normalised;
+  }
+
+  static bool _sameStringList(List<String> a, List<String> b) {
+    if (a.length != b.length) return false;
+
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+
+    return true;
+  }
+
+  static bool _hasSameProductDetails(Product a, Product b) {
+    return _normaliseText(a.name) == _normaliseText(b.name) &&
+        _normaliseText(a.brand) == _normaliseText(b.brand) &&
+        _normaliseText(a.productType) == _normaliseText(b.productType) &&
+        _sameStringList(
+          _normaliseList(a.categories),
+          _normaliseList(b.categories),
+        ) &&
+        _sameStringList(
+          _normaliseList(a.keyIngredients),
+          _normaliseList(b.keyIngredients),
+        ) &&
+        a.dateOpened == b.dateOpened &&
+        a.expirationDate == b.expirationDate &&
+        _normaliseText(a.notes) == _normaliseText(b.notes);
+  }
+
+  static Future<Product?> findDuplicateProduct(Product product) async {
+    final all = await getAllProducts();
+
+    for (final existingProduct in all) {
+      final isSameRecord = existingProduct.id == product.id;
+
+      if (isSameRecord) continue;
+
+      if (_hasSameProductDetails(existingProduct, product)) {
+        return existingProduct;
+      }
+    }
+
+    return null;
+  }
 }

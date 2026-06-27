@@ -3,6 +3,7 @@ import 'package:skin_diary/models/product.dart';
 import 'package:skin_diary/services/storage_product.dart';
 import 'package:skin_diary/screens/add_edit_product.dart';
 import 'package:skin_diary/navigation/product_navigation_result.dart';
+import 'package:skin_diary/app/app_routes.dart';
 
 class SelectProductScreen extends StatefulWidget {
   final List<Product>? initialSelection;
@@ -83,6 +84,14 @@ class _SelectProductScreenState extends State<SelectProductScreen> {
     }
   }
 
+  Future<void> _navigateToArchivedProducts() async {
+    await Navigator.pushNamed(context, AppRoutes.archivedProducts);
+
+    if (!mounted) return;
+
+    await _loadProducts();
+  }
+
   // Build
   @override
   Widget build(BuildContext context) {
@@ -106,17 +115,19 @@ class _SelectProductScreenState extends State<SelectProductScreen> {
                             color: Colors.grey,
                           ),
                           const SizedBox(height: 10),
-                          const Text(
-                            'No products found.',
-                            style: TextStyle(fontSize: 16),
-                          ),
+                          const Text('No active products found.'),
                           const SizedBox(height: 8),
-                          const Text('Add a product to use it in this entry.'),
+                          const Text('Add a new product or restore one from archived products.'),
                           const SizedBox(height: 16),
                           TextButton.icon(
                             onPressed: _navigateToAddProduct,
                             icon: const Icon(Icons.add),
                             label: const Text('Add new product'),
+                          ),
+                          TextButton.icon(
+                            onPressed: _navigateToArchivedProducts,
+                            icon: const Icon(Icons.archive),
+                            label: const Text('View archived products'),
                           ),
                         ],
                       ),
@@ -180,6 +191,11 @@ class _SelectProductScreenState extends State<SelectProductScreen> {
                         onPressed: _navigateToAddProduct,
                         icon: const Icon(Icons.add),
                         label: const Text('Add new product'),
+                      ),
+                      TextButton.icon(
+                        onPressed: _navigateToArchivedProducts,
+                        icon: const Icon(Icons.archive),
+                        label: const Text('View archived products'),
                       ),
                       const SizedBox(height: 10),
                       ElevatedButton(

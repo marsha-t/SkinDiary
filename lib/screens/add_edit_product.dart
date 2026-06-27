@@ -56,13 +56,14 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     _expirationDate = widget.product?.expirationDate;
     _keyIngredients = widget.product?.keyIngredients ?? [];
     _categories = widget.product?.categories ?? [];
-    final existingProductType = widget.product?.productType;
+    final existingProductType = widget.product?.productType?.trim();
+    final hasExistingProductType =
+        existingProductType != null && existingProductType.isNotEmpty;
 
-    _productType = existingProductType;
+    _productType = hasExistingProductType ? existingProductType : null;
 
     _isCustomProductType =
-        existingProductType != null &&
-        existingProductType.isNotEmpty &&
+        hasExistingProductType &&
         !_defaultProductTypes.contains(existingProductType);
   }
 
@@ -73,10 +74,11 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
     final now = DateTime.now();
     const uuid = Uuid();
-    final newProduct = Product(
+    final productToSave = Product(
       id: widget.product?.id ?? uuid.v4(),
       name: _name,
       brand: _brand,
+      status: widget.product?.status ?? ProductStatus.active,
       notes: _notes,
       dateAdded: widget.product?.dateAdded ?? now,
       dateOpened: _dateOpened,
@@ -86,13 +88,59 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       productType: _productType,
     );
 
-    await StorageProduct.saveProduct(newProduct);
+    final duplicateProduct = await StorageProduct.findDuplicateProduct(productToSave);
+
     if (!mounted) return;
-    Navigator.pop(context, ProductNavigationResult.saved(newProduct));
+
+    if (duplicateProduct != null) {
+      if (duplicateProduct.status == ProductStatus.archived) {
+        final restore = await showConfirmDialog(
+          context,
+          title: 'Product already archived',
+          content:
+              '"${duplicateProduct.name}" already exists in Archived Products. Restore it instead?',
+          confirmText: 'Restore',
+        );
+
+        if (!mounted) return;
+
+        if (restore) {
+          await StorageProduct.restoreProduct(duplicateProduct.id);
+
+          if (!mounted) return;
+
+          Navigator.pop(
+            context,
+            ProductNavigationResult.saved(
+              duplicateProduct.copyWith(status: ProductStatus.active),
+            ),
+          );
+        }
+
+        return;
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '"${duplicateProduct.name}" already exists on your shelf.',
+            ),
+          ),
+        );
+        return;
+      }
+    }
+
+    
+    await StorageProduct.saveProduct(productToSave);
+
+    if (!mounted) return;
+
+    Navigator.pop(context, ProductNavigationResult.saved(productToSave));
   }
 
   Future<void> _archiveProduct() async {
     final product = widget.product;
+    
     if (product == null) {
       Navigator.pop(context); // Nothing to archive
       return;
@@ -176,7 +224,10 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   );
 
   Widget _buildProductTypeField() {
-    final selectedDropdownValue = _isCustomProductType ? 'Other' : _productType;
+    final selectedDropdownValue =
+        _isCustomProductType || !_defaultProductTypes.contains(_productType)
+            ? (_productType == null ? null : 'Other')
+            : _productType;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -208,12 +259,10 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         if (_isCustomProductType)
           TextFormField(
             initialValue:
-                widget.product?.productType != null &&
-                        !_defaultProductTypes.contains(
-                          widget.product!.productType,
-                        )
-                    ? widget.product!.productType
-                    : '',
+                _productType != null &&
+                        !_defaultProductTypes.contains(_productType)
+                    ? _productType
+                     : '',
             decoration: const InputDecoration(labelText: 'Custom Product Type'),
             onSaved: (value) {
               final trimmed = value?.trim();
