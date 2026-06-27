@@ -123,16 +123,19 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> {
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children:
-              _entry.productsUsed.map((product) {
-                final brand = product.brand?.trim() ?? '';
-                final label =
-                    brand.isEmpty ? product.name : '$brand - ${product.name}';
-                return Chip(label: Text(label));
-              }).toList(),
+        Column(
+          children: _entry.productsUsed.asMap().entries.map((entry) {
+            final index = entry.key;
+            final product = entry.value;
+            final brand = product.brand?.trim() ?? '';
+            final label = brand.isEmpty ? product.name : '$brand - ${product.name}';
+
+            return ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: CircleAvatar(child: Text('${index + 1}')),
+              title: Text(label),
+            );
+          }).toList(),
         ),
         const SizedBox(height: 20),
       ],

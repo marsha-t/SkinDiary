@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:skin_diary/models/product.dart';
 import 'package:skin_diary/services/storage_product.dart';
 import 'package:skin_diary/screens/add_edit_product.dart';
+import 'package:skin_diary/screens/order_products.dart';
 import 'package:skin_diary/navigation/product_navigation_result.dart';
 import 'package:skin_diary/app/app_routes.dart';
 
@@ -90,6 +91,24 @@ class _SelectProductScreenState extends State<SelectProductScreen> {
     if (!mounted) return;
 
     await _loadProducts();
+  }
+
+  Future<void> _saveSelection() async {
+    if (_selectedProducts.length <= 1) {
+      Navigator.pop(context, _selectedProducts);
+      return;
+    }
+
+    final orderedProducts = await Navigator.push<List<Product>>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => OrderProductsScreen(products: _selectedProducts),
+      ),
+    );
+
+    if (!mounted || orderedProducts == null) return;
+
+    Navigator.pop(context, orderedProducts);
   }
 
   // Build
@@ -204,8 +223,7 @@ class _SelectProductScreenState extends State<SelectProductScreen> {
                       ),
                       const SizedBox(height: 10),
                       ElevatedButton(
-                        onPressed:
-                            () => Navigator.pop(context, _selectedProducts),
+                        onPressed: _saveSelection,
                         child: const Text('Save'),
                       ),
                     ],
