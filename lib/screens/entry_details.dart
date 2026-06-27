@@ -124,18 +124,20 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> {
         ),
         const SizedBox(height: 8),
         Column(
-          children: _entry.productsUsed.asMap().entries.map((entry) {
-            final index = entry.key;
-            final product = entry.value;
-            final brand = product.brand?.trim() ?? '';
-            final label = brand.isEmpty ? product.name : '$brand - ${product.name}';
+          children:
+              _entry.productsUsed.asMap().entries.map((entry) {
+                final index = entry.key;
+                final product = entry.value;
+                final brand = product.brand?.trim() ?? '';
+                final label =
+                    brand.isEmpty ? product.name : '$brand - ${product.name}';
 
-            return ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: CircleAvatar(child: Text('${index + 1}')),
-              title: Text(label),
-            );
-          }).toList(),
+                return ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: CircleAvatar(child: Text('${index + 1}')),
+                  title: Text(label),
+                );
+              }).toList(),
         ),
         const SizedBox(height: 20),
       ],

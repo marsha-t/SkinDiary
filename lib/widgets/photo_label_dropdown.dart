@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:skin_diary/constants/photo_labels.dart';
 
 class PhotoLabelDropdown extends StatefulWidget {
   final void Function(String) onLabelSelected;
@@ -10,22 +11,12 @@ class PhotoLabelDropdown extends StatefulWidget {
 }
 
 class _PhotoLabelDropdownState extends State<PhotoLabelDropdown> {
-  final List<String> _predefinedLabels = [
-    'Full Face',
-    'Forehead',
-    'Nose',
-    'Left Cheek',
-    'Right Cheek',
-    'Chin',
-    'Other (Custom)',
-  ];
-
   String? _selectedLabel;
 
   @override
   void initState() {
     super.initState();
-    _selectedLabel = _predefinedLabels.first;
+    _selectedLabel = photoLabels.first;
     widget.onLabelSelected(_selectedLabel!);
   }
 
@@ -40,7 +31,7 @@ class _PhotoLabelDropdownState extends State<PhotoLabelDropdown> {
           isExpanded: true,
           value: _selectedLabel,
           items:
-              _predefinedLabels.map((label) {
+              photoLabels.map((label) {
                 return DropdownMenuItem<String>(
                   value: label,
                   child: Text(label),
@@ -49,13 +40,13 @@ class _PhotoLabelDropdownState extends State<PhotoLabelDropdown> {
           onChanged: (value) {
             setState(() {
               _selectedLabel = value;
-              if (value != 'Other (Custom)') {
+              if (value != customPhotoLabelOption) {
                 widget.onLabelSelected(value!);
               }
             });
           },
         ),
-        if (_selectedLabel == 'Other (Custom)') ...[
+        if (_selectedLabel == customPhotoLabelOption) ...[
           const SizedBox(height: 12),
           const Text('Enter custom label:'),
           TextField(

@@ -4,20 +4,16 @@ import 'package:skin_diary/models/product.dart';
 class OrderProductsScreen extends StatefulWidget {
   final List<Product> products;
 
-  const OrderProductsScreen({
-    super.key,
-    required this.products,
-  });
+  const OrderProductsScreen({super.key, required this.products});
 
   @override
   State<OrderProductsScreen> createState() => _OrderProductsScreenState();
 }
 
 class _OrderProductsScreenState extends State<OrderProductsScreen> {
-  
   // State
   late List<Product> _orderedProducts;
-  
+
   // Lifecycle
   @override
   void initState() {
@@ -29,9 +25,7 @@ class _OrderProductsScreenState extends State<OrderProductsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Order Products'),
-      ),
+      appBar: AppBar(title: const Text('Order Products')),
       body: ReorderableListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: _orderedProducts.length,
@@ -40,9 +34,7 @@ class _OrderProductsScreenState extends State<OrderProductsScreen> {
 
           return ListTile(
             key: ValueKey(product.id),
-            leading: CircleAvatar(
-              child: Text('${index + 1}'),
-            ),
+            leading: CircleAvatar(child: Text('${index + 1}')),
             title: Text(product.name),
             subtitle: _buildProductSubtitle(product),
             trailing: const Icon(Icons.drag_handle),
@@ -73,13 +65,11 @@ class _OrderProductsScreenState extends State<OrderProductsScreen> {
 
   // UI builder
   Widget? _buildProductSubtitle(Product product) {
-    final parts = [
-      product.brand,
-      product.productType,
-    ]
-        .where((value) => value != null && value.trim().isNotEmpty)
-        .map((value) => value!.trim())
-        .toList();
+    final parts =
+        [product.brand, product.productType]
+            .where((value) => value != null && value.trim().isNotEmpty)
+            .map((value) => value!.trim())
+            .toList();
 
     if (parts.isEmpty) return null;
 

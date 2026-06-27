@@ -13,6 +13,7 @@ import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:skin_diary/navigation/entry_navigation_result.dart';
 import 'package:skin_diary/models/entry_photo.dart';
+import 'package:skin_diary/constants/photo_labels.dart';
 
 class AddEditEntryScreen extends StatefulWidget {
   final SkinEntry? existingEntry;
@@ -31,7 +32,7 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
   late List<String> _tags;
   late String _notes;
   List<EntryPhoto> _photos = [];
-  String _selectedLabel = 'Full Face';
+  String _selectedLabel = photoLabels.first;
   List<Product> _selectedProducts = [];
 
   // Lifecycle
@@ -144,16 +145,122 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
     if (!mounted) return;
 
     if (source != null) {
-      final pickedFile = await ImagePicker().pickImage(source: source);
-      if (!mounted || pickedFile == null) return;
+      try {
+        final pickedFile = await ImagePicker().pickImage(source: source);
 
-      final savedPath = await _saveImagePermanently(pickedFile.path);
-      if (!mounted) return;
+        if (!mounted || pickedFile == null) return;
 
-      setState(() {
-        _photos.add(EntryPhoto(path: savedPath, label: _selectedLabel));
-      });
+        String savedPath;
+
+        try {
+          savedPath = await _saveImagePermanently(pickedFile.path);
+        } catch (error) {
+          debugPrint('Image save error: $error');
+
+          if (!mounted) return;
+
+          _showPhotoError('Could not save photo. Please try again.');
+
+          return;
+        }
+
+        if (!mounted) return;
+
+        setState(() {
+          _photos.add(EntryPhoto(path: savedPath, label: _selectedLabel));
+        });
+      } catch (error) {
+        debugPrint('Image picker error: $error');
+
+        if (!mounted) return;
+
+        _showPhotoError(
+          source == ImageSource.camera
+              ? 'Could not take photo. Check camera permissions and try again.'
+              : 'Could not choose photo. Check photo library permissions and try again.',
+        );
+      }
     }
+  }
+
+  void _showPhotoError(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _editPhotoLabel(int index) async {
+    final selectedLabel = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return SimpleDialog(
+          title: const Text('Change photo label'),
+          children:
+              photoLabels.map((label) {
+                return SimpleDialogOption(
+                  onPressed: () => Navigator.pop(context, label),
+                  child: Text(label),
+                );
+              }).toList(),
+        );
+      },
+    );
+
+    if (!mounted || selectedLabel == null) return;
+
+    String finalLabel = selectedLabel;
+
+    if (selectedLabel == customPhotoLabelOption) {
+      final customLabel = await _askForCustomPhotoLabel();
+
+      if (!mounted || customLabel == null) return;
+
+      finalLabel = customLabel;
+    }
+
+    setState(() {
+      _photos[index] = _photos[index].copyWith(label: finalLabel);
+    });
+  }
+
+  Future<String?> _askForCustomPhotoLabel() async {
+    String customLabel = '';
+
+    return showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Custom photo label'),
+          content: TextField(
+            autofocus: true,
+            decoration: const InputDecoration(
+              hintText: 'e.g., Left temple',
+            ),
+            onChanged: (value) {
+              customLabel = value;
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                final trimmed = customLabel.trim();
+
+                if (trimmed.isEmpty) {
+                  Navigator.pop(context);
+                } else {
+                  Navigator.pop(context, trimmed);
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   // Product actions
@@ -314,14 +421,24 @@ class _AddEditEntryScreenState extends State<AddEditEntryScreen> {
                           child: const Icon(Icons.broken_image, size: 40),
                         ),
                     Text(photo.label),
-                    IconButton(
-                      tooltip: 'Remove photo from entry',
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () {
-                        setState(() {
-                          _photos.removeAt(index);
-                        });
-                      },
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          tooltip: 'Edit photo label',
+                          icon: const Icon(Icons.edit),
+                          onPressed: () => _editPhotoLabel(index),
+                        ),
+                        IconButton(
+                          tooltip: 'Remove photo from entry',
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          onPressed: () {
+                            setState(() {
+                              _photos.removeAt(index);
+                            });
+                          },
+                        ),
+                      ],
                     ),
                   ],
                 );

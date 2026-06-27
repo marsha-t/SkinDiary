@@ -88,7 +88,9 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       productType: _productType,
     );
 
-    final duplicateProduct = await StorageProduct.findDuplicateProduct(productToSave);
+    final duplicateProduct = await StorageProduct.findDuplicateProduct(
+      productToSave,
+    );
 
     if (!mounted) return;
 
@@ -130,7 +132,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       }
     }
 
-    
     await StorageProduct.saveProduct(productToSave);
 
     if (!mounted) return;
@@ -140,7 +141,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
   Future<void> _archiveProduct() async {
     final product = widget.product;
-    
+
     if (product == null) {
       Navigator.pop(context); // Nothing to archive
       return;
@@ -262,7 +263,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                 _productType != null &&
                         !_defaultProductTypes.contains(_productType)
                     ? _productType
-                     : '',
+                    : '',
             decoration: const InputDecoration(labelText: 'Custom Product Type'),
             onSaved: (value) {
               final trimmed = value?.trim();

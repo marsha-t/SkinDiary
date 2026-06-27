@@ -136,7 +136,9 @@ class _SelectProductScreenState extends State<SelectProductScreen> {
                           const SizedBox(height: 10),
                           const Text('No active products found.'),
                           const SizedBox(height: 8),
-                          const Text('Add a new product or restore one from archived products.'),
+                          const Text(
+                            'Add a new product or restore one from archived products.',
+                          ),
                           const SizedBox(height: 16),
                           TextButton.icon(
                             onPressed: _navigateToAddProduct,
