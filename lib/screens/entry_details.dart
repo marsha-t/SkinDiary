@@ -17,7 +17,6 @@ class EntryDetailsScreen extends StatefulWidget {
 }
 
 class _EntryDetailsScreenState extends State<EntryDetailsScreen> {
-  
   // State
   late SkinEntry _entry;
 
@@ -129,10 +128,8 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> {
           runSpacing: 8,
           children:
               _entry.productsUsed.map((product) {
-                final label =
-                    product.brand.trim().isEmpty
-                        ? product.name
-                        : '${product.brand} - ${product.name}';
+                final brand = product.brand?.trim() ?? '';
+                final label = brand.isEmpty ? product.name : '$brand - ${product.name}';
                 return Chip(label: Text(label));
               }).toList(),
         ),

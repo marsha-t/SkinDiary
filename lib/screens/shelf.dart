@@ -4,6 +4,7 @@ import 'package:skin_diary/screens/add_edit_product.dart';
 import 'package:skin_diary/services/storage_product.dart';
 import 'package:skin_diary/utils/snackbar.dart';
 import 'package:skin_diary/utils/dialogs.dart';
+import 'package:skin_diary/navigation/product_navigation_result.dart';
 
 class ShelfScreen extends StatefulWidget {
   const ShelfScreen({super.key});
@@ -36,32 +37,35 @@ class _ShelfScreenState extends State<ShelfScreen> {
 
   // Navigation
   Future<void> _navigateToAddProduct() async {
-    final result = await Navigator.push<Product>(
+    final result = await Navigator.push<ProductNavigationResult>(
       context,
       MaterialPageRoute(builder: (_) => const AddEditProductScreen()),
     );
 
-    if (!mounted) return;
+    if (!mounted || result == null) return;
 
     await _loadProducts();
-
-    if (result != null) {
-      _showUndoDeleteProductSnackBar(result);
-    }
   }
 
   Future<void> _navigateToEditProduct(Product product) async {
-    final result = await Navigator.push<Product>(
+    final result = await Navigator.push<ProductNavigationResult>(
       context,
       MaterialPageRoute(builder: (_) => AddEditProductScreen(product: product)),
     );
 
-    if (!mounted) return;
+    if (!mounted || result == null) return;
 
     await _loadProducts();
 
-    if (result != null) {
-      _showUndoDeleteProductSnackBar(result);
+    if (!mounted) return;
+
+    switch (result.action) {
+      case ProductNavigationAction.saved:
+        break;
+
+      case ProductNavigationAction.deleted:
+        _showUndoDeleteProductSnackBar(result.product);
+        break;
     }
   }
 

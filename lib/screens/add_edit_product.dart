@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 import 'package:skin_diary/models/product.dart';
 import 'package:skin_diary/services/storage_product.dart';
 import 'package:skin_diary/utils/dialogs.dart';
+import 'package:skin_diary/navigation/product_navigation_result.dart';
 
 class AddEditProductScreen extends StatefulWidget {
   final Product? product;
@@ -62,7 +63,10 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
     await StorageProduct.saveProduct(newProduct);
     if (!mounted) return;
-    Navigator.pop(context);
+    Navigator.pop(
+      context,
+      ProductNavigationResult.saved(newProduct),
+    );
   }
 
   Future<void> _deleteProduct() async {
@@ -80,7 +84,10 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     if (confirm) {
       await StorageProduct.deleteProduct(product.id);
       if (!mounted) return;
-      Navigator.pop(context, product); // Return deleted product
+      Navigator.pop(
+        context,
+        ProductNavigationResult.deleted(product),
+      );
     }
   }
 
